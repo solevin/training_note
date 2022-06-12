@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
+import 'package:training_note/db/training_log.dart';
+import 'package:training_note/db/db_provider.dart';
+import 'package:training_note/db/training_log_dao.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -18,14 +21,46 @@ class TrainingLogPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     DateTime selectedDay = ref.watch(selectedProvider);
     List<bool> isSelected = ref.watch(isSelectedProvider);
-    final pageTitle = Text(DateFormat('M/d (E)').format(selectedDay));
+    int ballQuantity = ref.watch(ballQuantityProvider);
+    String memo = ref.watch(memoProvider);
+    String date = DateFormat('M/d (E)').format(selectedDay);
+    final dao = TrainingLogDao();
     return Scaffold(
-      appBar: AppBar(title: pageTitle),
+      appBar: AppBar(title: Text(date)),
       body: Column(
         children: [
           isPractice(ref, isSelected),
-          isSelected[0] == true ? ballQuantity() : score(),
-          memo(),
+          isSelected[0] == true ? inputBallQuantity(ref) : score(),
+          inputMemo(ref),
+          Padding(
+            padding: EdgeInsets.all(8.r),
+            child: Visibility(
+              visible: isSelected[0],
+              child: GestureDetector(
+                onTap: () async {
+                  final trainingLog = TrainingLog(
+                    date: date,
+                    ballQuantity: ballQuantity,
+                    memo: memo,
+                  );
+                  await dao.create(trainingLog);
+                  final test = await dao.findAll();
+                  print(test);
+                },
+                child: Container(
+                  height: 30.h,
+                  width: 80.w,
+                  color: Colors.blue,
+                  child: Center(
+                    child: Text(
+                      'add',
+                      style: TextStyle(fontSize: 20.sp, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -70,7 +105,7 @@ Widget isPractice(WidgetRef ref, List<bool> isSelected) {
   );
 }
 
-Widget memo() {
+Widget inputMemo(WidgetRef ref) {
   return Column(
     children: [
       Text(
@@ -91,13 +126,16 @@ Widget memo() {
               borderSide: BorderSide(color: Colors.blue),
             ),
           ),
+          onChanged: (text) {
+            ref.read(memoProvider.notifier).state = text;
+          },
         ),
       ),
     ],
   );
 }
 
-Widget ballQuantity() {
+Widget inputBallQuantity(WidgetRef ref) {
   return Column(
     children: [
       Row(
@@ -123,6 +161,9 @@ Widget ballQuantity() {
                     borderSide: BorderSide(color: Colors.blue),
                   ),
                 ),
+                onChanged: (text) {
+                  ref.read(ballQuantityProvider.notifier).state = text as int;
+                },
               ),
             ),
           ),
