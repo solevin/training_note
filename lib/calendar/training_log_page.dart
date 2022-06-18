@@ -27,6 +27,7 @@ class TrainingLogPage extends HookConsumerWidget {
     DateTime selectedDay = ref.watch(selectedProvider);
     List<bool> isSelected = ref.watch(isSelectedProvider);
     String ballQuantity = ref.watch(ballQuantityProvider);
+    String score = ref.watch(scoreProvider);
     String memo = ref.watch(memoProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
     final dao = TrainingLogDao();
@@ -35,45 +36,49 @@ class TrainingLogPage extends HookConsumerWidget {
       body: Column(
         children: [
           isPractice(ref, isSelected),
-          isSelected[0] == true ? inputBallQuantity(ref) : score(),
+          isSelected[0] == true ? inputBallQuantity(ref) : inputScore(ref),
           inputMemo(ref),
           Padding(
             padding: EdgeInsets.all(8.r),
-            child: Visibility(
-              visible: isSelected[0],
-              child: GestureDetector(
-                onTap: () async {
-                  int ballQuantityResult;
-                  try{
-                    ballQuantityResult = int.parse(ballQuantity);
-                  }catch(e){
-                    ballQuantityResult = 0;
-                  }
-                  final trainingLog = TrainingLog(
-                    year: selectedDay.year,
-                    month: selectedDay.month,
-                    day: selectedDay.day,
-                    ballQuantity: ballQuantityResult,
-                    memo: memo,
-                  );
-                  if (id >= 0) {
-                    await dao.update(id, trainingLog);
-                  } else {
-                    dao.create(trainingLog);
-                  }
-                  Navigator.of(context).push<dynamic>(
-                    HomePage.route(),
-                  );
-                },
-                child: Container(
-                  height: 30.h,
-                  width: 80.w,
-                  color: Colors.blue,
-                  child: Center(
-                    child: Text(
-                      'add',
-                      style: TextStyle(fontSize: 20.sp, color: Colors.white),
-                    ),
+            child: GestureDetector(
+              onTap: () async {
+                int ballQuantityResult;
+                try{
+                  ballQuantityResult = int.parse(ballQuantity);
+                }catch(e){
+                  ballQuantityResult = 0;
+                }
+                int scoreResult;
+                try{
+                  scoreResult = int.parse(score);
+                }catch(e){
+                  scoreResult = 0;
+                }
+                final trainingLog = TrainingLog(
+                  year: selectedDay.year,
+                  month: selectedDay.month,
+                  day: selectedDay.day,
+                  ballQuantity: ballQuantityResult,
+                  score: scoreResult,
+                  memo: memo,
+                );
+                if (id >= 0) {
+                  await dao.update(id, trainingLog);
+                } else {
+                  dao.create(trainingLog);
+                }
+                Navigator.of(context).push<dynamic>(
+                  HomePage.route(),
+                );
+              },
+              child: Container(
+                height: 30.h,
+                width: 80.w,
+                color: Colors.blue,
+                child: Center(
+                  child: Text(
+                    'add',
+                    style: TextStyle(fontSize: 20.sp, color: Colors.white),
                   ),
                 ),
               ),
@@ -195,7 +200,8 @@ Widget inputBallQuantity(WidgetRef ref) {
   );
 }
 
-Widget score() {
+Widget inputScore(WidgetRef ref) {
+  String text = ref.read(scoreProvider).toString();
   return Column(
     children: [
       Row(
@@ -212,6 +218,7 @@ Widget score() {
               child: TextField(
                 style: TextStyle(fontSize: 15.sp),
                 keyboardType: TextInputType.number,
+                controller: TextEditingController(text: text),
                 decoration: const InputDecoration(
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.red),
@@ -220,6 +227,9 @@ Widget score() {
                     borderSide: BorderSide(color: Colors.blue),
                   ),
                 ),
+                onChanged: (text) {
+                  ref.read(scoreProvider.notifier).state = text;
+                },
               ),
             ),
           ),

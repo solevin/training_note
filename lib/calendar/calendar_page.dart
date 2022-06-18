@@ -113,15 +113,29 @@ Future<Map<DateTime, List<Map<String, Object>>>> addEvents(
   for (int i = 0; i < eventList.length; i++) {
     final event = eventList[i];
     final date = DateTime(event.year, event.month, event.day);
-    final contents = {'ballQuantity': event.ballQuantity, 'memo': event.memo};
-    if (preEvents[date] != null) {
-      final tmpList = preEvents[date];
-      tmpList!.add(contents);
-      preEvents.addAll({date: tmpList});
-    } else {
-      preEvents.addAll({
-        date: [contents]
-      });
+    if (event.ballQuantity > 0) {
+      final contents = {'ballQuantity': event.ballQuantity, 'memo': event.memo};
+      if (preEvents[date] != null) {
+        final tmpList = preEvents[date];
+        tmpList!.add(contents);
+        preEvents.addAll({date: tmpList});
+      } else {
+        preEvents.addAll({
+          date: [contents]
+        });
+      }
+    }
+    if (event.score > 0) {
+      final contents = {'score': event.score, 'memo': event.memo};
+      if (preEvents[date] != null) {
+        final tmpList = preEvents[date];
+        tmpList!.add(contents);
+        preEvents.addAll({date: tmpList});
+      } else {
+        preEvents.addAll({
+          date: [contents]
+        });
+      }
     }
   }
   return preEvents;
@@ -134,11 +148,14 @@ Future<int> setDateProvider(WidgetRef ref) async {
       await dao.findByDay(selectedDay.year, selectedDay.month, selectedDay.day);
   if (eventId.isNotEmpty) {
     final event = await dao.findById(eventId[0]);
-    ref.read(ballQuantityProvider.notifier).state = event.ballQuantity.toString();
+    ref.read(ballQuantityProvider.notifier).state =
+        event.ballQuantity.toString();
+    ref.read(scoreProvider.notifier).state = event.score.toString();
     ref.read(memoProvider.notifier).state = event.memo;
     return eventId[0];
   } else {
     ref.read(ballQuantityProvider.notifier).state = '0';
+    ref.read(scoreProvider.notifier).state = '0';
     ref.read(memoProvider.notifier).state = '';
     return -1;
   }

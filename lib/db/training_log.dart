@@ -5,6 +5,7 @@ class TrainingLog {
     required this.month,
     required this.day,
     required this.ballQuantity,
+    required this.score,
     required this.memo,
   });
 
@@ -14,6 +15,7 @@ class TrainingLog {
         month= paramMap['month'] as int,
         day = paramMap['day'] as int,
         ballQuantity = paramMap['ballQuantity'] as int,
+        score = paramMap['score'] as int,
         memo = paramMap['memo'] as String;
 
   final int? id;
@@ -21,6 +23,7 @@ class TrainingLog {
   final int month;
   final int day;
   final int ballQuantity;
+  final int score;
   final String memo;
 
   Map<String, dynamic> toMap() => <String, dynamic>{
@@ -29,6 +32,7 @@ class TrainingLog {
         'month': month,
         'day': day,
         'ballQuantity': ballQuantity,
+        'score': score,
         'memo': memo,
       };
 

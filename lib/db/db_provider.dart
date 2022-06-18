@@ -43,6 +43,7 @@ class DBProvider {
                 month INTEGER,
                 day INTEGER,
                 ballQuantity INTEGER,
+                score INTEGER,
                 memo TEXT
               )
             """);
