@@ -5,7 +5,6 @@ import 'package:training_note/db/training_log.dart';
 class TrainingLogDao {
   final DBProvider _dbProvider = DBProvider();
 
-
   Future<int> create(TrainingLog log) async {
     final db = await _dbProvider.database;
     final result = await db!.insert(tableNameTrainingLog, log.toMapExceptId());
@@ -25,14 +24,14 @@ class TrainingLogDao {
     final db = await _dbProvider.database;
     final result =
         await db!.query(tableNameTrainingLog, where: 'id=?', whereArgs: [id]);
-    final meat = TrainingLog.fromMap(result[0]);
-    return meat;
+    final log = TrainingLog.fromMap(result[0]);
+    return log;
   }
 
-  Future<List<int>> findByDate(String date) async {
+  Future<List<int>> findByYear(int year) async {
     final db = await _dbProvider.database;
-    final result =
-        await db!.query(tableNameTrainingLog, where: 'date=?', whereArgs: [date]);
+    final result = await db!
+        .query(tableNameTrainingLog, where: 'year=?', whereArgs: [year]);
     var eachDateList = <int>[];
     for (var i = 0; i < result.length; i++) {
       eachDateList.add(result[i]['id'] as int);
@@ -40,15 +39,26 @@ class TrainingLogDao {
     return eachDateList;
   }
 
-  Future<List<int>> findByKind(String kind) async {
+  Future<List<int>> findByMonth(int year, int month) async {
     final db = await _dbProvider.database;
-    final result =
-        await db!.query(tableNameTrainingLog, where: 'kind=?', whereArgs: [kind]);
-    var eachKindList = <int>[];
+    final result = await db!.query(tableNameTrainingLog,
+        where: 'year=? and month=?', whereArgs: [year, month]);
+    var eachDateList = <int>[];
     for (var i = 0; i < result.length; i++) {
-      eachKindList.add(result[i]['id'] as int);
+      eachDateList.add(result[i]['id'] as int);
     }
-    return eachKindList;
+    return eachDateList;
+  }
+
+  Future<List<int>> findByDay(int year, int month, int day) async {
+    final db = await _dbProvider.database;
+    final result = await db!.query(tableNameTrainingLog,
+        where: 'year=? and month=? and day=?', whereArgs: [year, month, day]);
+    var eachDateList = <int>[];
+    for (var i = 0; i < result.length; i++) {
+      eachDateList.add(result[i]['id'] as int);
+    }
+    return eachDateList;
   }
 
   Future<int> update(int id, TrainingLog log) async {

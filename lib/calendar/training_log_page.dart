@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/db/training_log.dart';
-import 'package:training_note/db/db_provider.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:training_note/home/home_page.dart';
 
 final indexProvider = StateProvider<int>((ref) => 0);
 
 class TrainingLogPage extends HookConsumerWidget {
-  static Route<dynamic> route() {
+  static Route<dynamic> route({
+    required int id,
+  }) {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const TrainingLogPage(),
+      settings: RouteSettings(arguments: id),
     );
   }
 
   const TrainingLogPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    int id = ModalRoute.of(context)!.settings.arguments as int;
     DateTime selectedDay = ref.watch(selectedProvider);
     List<bool> isSelected = ref.watch(isSelectedProvider);
-    int ballQuantity = ref.watch(ballQuantityProvider);
+    String ballQuantity = ref.watch(ballQuantityProvider);
     String memo = ref.watch(memoProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
     final dao = TrainingLogDao();
@@ -38,14 +43,27 @@ class TrainingLogPage extends HookConsumerWidget {
               visible: isSelected[0],
               child: GestureDetector(
                 onTap: () async {
+                  int ballQuantityResult;
+                  try{
+                    ballQuantityResult = int.parse(ballQuantity);
+                  }catch(e){
+                    ballQuantityResult = 0;
+                  }
                   final trainingLog = TrainingLog(
-                    date: date,
-                    ballQuantity: ballQuantity,
+                    year: selectedDay.year,
+                    month: selectedDay.month,
+                    day: selectedDay.day,
+                    ballQuantity: ballQuantityResult,
                     memo: memo,
                   );
-                  await dao.create(trainingLog);
-                  final test = await dao.findAll();
-                  print(test);
+                  if (id >= 0) {
+                    await dao.update(id, trainingLog);
+                  } else {
+                    dao.create(trainingLog);
+                  }
+                  Navigator.of(context).push<dynamic>(
+                    HomePage.route(),
+                  );
                 },
                 child: Container(
                   height: 30.h,
@@ -106,6 +124,7 @@ Widget isPractice(WidgetRef ref, List<bool> isSelected) {
 }
 
 Widget inputMemo(WidgetRef ref) {
+  String text = ref.read(memoProvider);
   return Column(
     children: [
       Text(
@@ -118,6 +137,7 @@ Widget inputMemo(WidgetRef ref) {
           style: TextStyle(fontSize: 15.sp),
           keyboardType: TextInputType.multiline,
           maxLines: null,
+          controller: TextEditingController(text: text),
           decoration: const InputDecoration(
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: Colors.red),
@@ -136,6 +156,7 @@ Widget inputMemo(WidgetRef ref) {
 }
 
 Widget inputBallQuantity(WidgetRef ref) {
+  String text = ref.read(ballQuantityProvider).toString();
   return Column(
     children: [
       Row(
@@ -152,6 +173,7 @@ Widget inputBallQuantity(WidgetRef ref) {
               child: TextField(
                 style: TextStyle(fontSize: 15.sp),
                 keyboardType: TextInputType.number,
+                controller: TextEditingController(text: text),
                 // inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   enabledBorder: OutlineInputBorder(
@@ -162,7 +184,7 @@ Widget inputBallQuantity(WidgetRef ref) {
                   ),
                 ),
                 onChanged: (text) {
-                  ref.read(ballQuantityProvider.notifier).state = text as int;
+                  ref.read(ballQuantityProvider.notifier).state = text;
                 },
               ),
             ),
@@ -190,7 +212,6 @@ Widget score() {
               child: TextField(
                 style: TextStyle(fontSize: 15.sp),
                 keyboardType: TextInputType.number,
-                // inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.red),

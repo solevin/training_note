@@ -39,7 +39,9 @@ class DBProvider {
             CREATE TABLE TrainingLog
               (
                 id INTEGER PRIMARY KEY,
-                date TEXT,
+                year INTEGER,
+                month INTEGER,
+                day INTEGER,
                 ballQuantity INTEGER,
                 memo TEXT
               )
