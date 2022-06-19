@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:training_note/ability/ability_page.dart';
 import 'package:training_note/advice/advice_page.dart';
-import 'package:training_note/calendar/calendar.dart';
+import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/target/target_page.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -22,7 +21,7 @@ class HomePage extends HookConsumerWidget {
     DateTime focusedDay = DateTime.now();
     final int count = ref.watch(indexProvider);
     final List<Widget> pages = [
-      calendarPage(),
+      calendarPage(context, ref),
       advicePage(),
       abilityPage(),
       targetPage()
