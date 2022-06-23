@@ -61,6 +61,17 @@ class TrainingLogDao {
     return eachDateList;
   }
 
+  Future<List<int>> findGame() async {
+    final db = await _dbProvider.database;
+    final result =
+        await db!.query(tableNameTrainingLog, where: 'game=?', whereArgs: [1]);
+    var eachDateList = <int>[];
+    for (var i = 0; i < result.length; i++) {
+      eachDateList.add(result[i]['id'] as int);
+    }
+    return eachDateList;
+  }
+
   Future<int> update(int id, TrainingLog log) async {
     final db = await _dbProvider.database;
     final result = await db!.update(

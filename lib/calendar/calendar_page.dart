@@ -44,6 +44,63 @@ Widget futureCalendar(
 
   return Column(
     children: [
+      FutureBuilder(
+        future: setTrainingAmount(focusedDay.year, focusedDay.month),
+        builder: (BuildContext context, AsyncSnapshot<List<int>> snapshot) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(0, 20.h, 0, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(60.w, 0, 0, 0),
+                  child: SizedBox(
+                    width: 130.w,
+                    child: Row(
+                      children: [
+                        Text(
+                          '年間 : ',
+                          style: TextStyle(fontSize: 20.sp),
+                        ),
+                        snapshot.hasData
+                            ? Text(
+                                snapshot.data![0].toString(),
+                                style: TextStyle(fontSize: 20.sp),
+                              )
+                            : Text(
+                                ' ',
+                                style: TextStyle(fontSize: 20.sp),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 130.w,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Text(
+                        '月間 : ',
+                        style: TextStyle(fontSize: 20.sp),
+                      ),
+                      snapshot.hasData
+                          ? Text(
+                              snapshot.data![1].toString(),
+                              style: TextStyle(fontSize: 20.sp),
+                            )
+                          : Text(
+                              ' ',
+                              style: TextStyle(fontSize: 20.sp),
+                            ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
       Padding(
           padding: EdgeInsets.fromLTRB(0, 10.h, 0, 0),
           child: TableCalendar(
@@ -159,4 +216,22 @@ Future<int> setDateProvider(WidgetRef ref) async {
     ref.read(memoProvider.notifier).state = '';
     return -1;
   }
+}
+
+Future<List<int>> setTrainingAmount(int year, int month) async {
+  final dao = TrainingLogDao();
+  final yearIds = await dao.findByYear(year);
+  final monthIds = await dao.findByMonth(year, month);
+  int yearSum = 0;
+  int monthSum = 0;
+  for (int i = 0; i < yearIds.length; i++) {
+    final training = await dao.findById(yearIds[i]);
+    yearSum += training.ballQuantity;
+  }
+  for (int i = 0; i < monthIds.length; i++) {
+    final training = await dao.findById(monthIds[i]);
+    monthSum += training.ballQuantity;
+  }
+
+  return [yearSum, monthSum];
 }
