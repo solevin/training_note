@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:training_note/home/home_page.dart';
-
-final indexProvider = StateProvider<int>((ref) => 0);
 
 class TrainingLogPage extends HookConsumerWidget {
   static Route<dynamic> route({
@@ -83,7 +81,7 @@ class TrainingLogPage extends HookConsumerWidget {
                   dao.create(trainingLog);
                 }
                 Navigator.of(context).push<dynamic>(
-                  HomePage.route(),
+                  CalendarPage.route(),
                 );
               },
               child: Container(

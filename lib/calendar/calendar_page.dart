@@ -1,38 +1,55 @@
 import 'package:flutter/material.dart';
 import 'dart:collection';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:training_note/db/distance_by_count_dao.dart';
+import 'package:training_note/home/home_view.dart';
 import 'package:training_note/calendar/training_log_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-Widget calendarPage(BuildContext context, WidgetRef ref) {
-  DateTime focusedDay = ref.watch(focusProvider);
-  DateTime selectedDay = ref.watch(selectedProvider);
-  return FutureBuilder(
-      future: addEvents(focusedDay.year, focusedDay.month, ref),
-      builder: (BuildContext context,
-          AsyncSnapshot<Map<DateTime, List<Map<String, Object>>>> snapshot) {
-        if (snapshot.hasData) {
-          return futureCalendar(
-              focusedDay, selectedDay, snapshot.data!, context, ref);
-        } else {
-          return syncCalendar(focusedDay, ref);
-        }
-      });
+class CalendarPage extends HookConsumerWidget {
+  static Route<dynamic> route() {
+    return MaterialPageRoute<dynamic>(
+      builder: (_) => const CalendarPage(),
+    );
+  }
+
+  const CalendarPage({Key? key}) : super(key: key);
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    DateTime focusedDay = ref.watch(focusProvider);
+    DateTime selectedDay = ref.watch(selectedProvider);
+    return Scaffold(
+      appBar: AppBar(
+          title: Text(
+            'Calendar',
+            style: TextStyle(fontSize: 20.sp),
+          ),
+          automaticallyImplyLeading: false),
+      body: FutureBuilder(
+        future: getSnapshot(ref, focusedDay),
+        builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
+          if (snapshot.hasData) {
+            return futureCalendar(
+                focusedDay, selectedDay, snapshot.data!, context, ref);
+          } else {
+            return syncCalendar(focusedDay, ref);
+          }
+        },
+      ),
+      bottomNavigationBar: commonBottomNavigationBar(context, ref),
+    );
+  }
 }
 
-Widget futureCalendar(
-    DateTime focusedDay,
-    DateTime selectedDay,
-    Map<DateTime, List<Map<String, Object>>> preEvents,
-    BuildContext context,
-    WidgetRef ref) {
+Widget futureCalendar(DateTime focusedDay, DateTime selectedDay, List snapshot,
+    BuildContext context, WidgetRef ref) {
   LinkedHashMap<DateTime, List> events = LinkedHashMap<DateTime, List>(
     equals: isSameDay,
     hashCode: getHashCode,
-  )..addAll(preEvents);
+  )..addAll(snapshot[0]);
 
   List getEventForDay(DateTime day) {
     if (events[day] == null) {
@@ -44,92 +61,78 @@ Widget futureCalendar(
 
   return Column(
     children: [
-      FutureBuilder(
-        future: setTrainingAmount(focusedDay.year, focusedDay.month),
-        builder: (BuildContext context, AsyncSnapshot<List<int>> snapshot) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(0, 20.h, 0, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(60.w, 0, 0, 0),
-                  child: SizedBox(
-                    width: 130.w,
-                    child: Row(
-                      children: [
-                        Text(
-                          '年間 : ',
-                          style: TextStyle(fontSize: 20.sp),
-                        ),
-                        snapshot.hasData
-                            ? Text(
-                                snapshot.data![0].toString(),
-                                style: TextStyle(fontSize: 20.sp),
-                              )
-                            : Text(
-                                ' ',
-                                style: TextStyle(fontSize: 20.sp),
-                              ),
-                      ],
+      Padding(
+        padding: EdgeInsets.fromLTRB(0, 20.h, 0, 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(60.w, 0, 0, 0),
+              child: SizedBox(
+                width: 130.w,
+                child: Row(
+                  children: [
+                    Text(
+                      '年間 : ',
+                      style: TextStyle(fontSize: 20.sp),
                     ),
-                  ),
+                    Text(
+                      snapshot[1][0].toString(),
+                      style: TextStyle(fontSize: 20.sp),
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  width: 130.w,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Text(
-                        '月間 : ',
-                        style: TextStyle(fontSize: 20.sp),
-                      ),
-                      snapshot.hasData
-                          ? Text(
-                              snapshot.data![1].toString(),
-                              style: TextStyle(fontSize: 20.sp),
-                            )
-                          : Text(
-                              ' ',
-                              style: TextStyle(fontSize: 20.sp),
-                            ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
-          );
-        },
+            SizedBox(
+              width: 130.w,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    '月間 : ',
+                    style: TextStyle(fontSize: 20.sp),
+                  ),
+                  Text(
+                    snapshot[1][1].toString(),
+                    style: TextStyle(fontSize: 20.sp),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       Padding(
-          padding: EdgeInsets.fromLTRB(0, 10.h, 0, 0),
-          child: TableCalendar(
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2050, 12, 31),
-            focusedDay: focusedDay,
-            eventLoader: getEventForDay,
-            headerStyle: const HeaderStyle(
-              formatButtonVisible: false,
-            ),
-            selectedDayPredicate: (day) {
-              return isSameDay(selectedDay, day);
-            },
-            onDaySelected: (newSelectedDay, newFocusedDay) async {
-              if (!isSameDay(selectedDay, newSelectedDay)) {
-                ref.read(selectedProvider.notifier).state = newSelectedDay;
-                ref.read(focusProvider.notifier).state = newFocusedDay;
-                getEventForDay(selectedDay);
-              } else {
-                final id = await setDateProvider(ref);
-                Navigator.of(context).push<dynamic>(
-                  TrainingLogPage.route(id: id),
-                );
-              }
-            },
-            onPageChanged: (newFocusedDay) {
+        padding: EdgeInsets.fromLTRB(0, 10.h, 0, 0),
+        child: TableCalendar(
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2050, 12, 31),
+          focusedDay: focusedDay,
+          eventLoader: getEventForDay,
+          headerStyle: const HeaderStyle(
+            formatButtonVisible: false,
+          ),
+          selectedDayPredicate: (day) {
+            return isSameDay(selectedDay, day);
+          },
+          onDaySelected: (newSelectedDay, newFocusedDay) async {
+            if (!isSameDay(selectedDay, newSelectedDay)) {
+              ref.read(selectedProvider.notifier).state = newSelectedDay;
               ref.read(focusProvider.notifier).state = newFocusedDay;
-            },
-          )),
+              getEventForDay(selectedDay);
+            } else {
+              final id = await setDateProvider(ref);
+              Navigator.of(context).push<dynamic>(
+                TrainingLogPage.route(id: id),
+              );
+            }
+          },
+          onPageChanged: (newFocusedDay) {
+            ref.read(focusProvider.notifier).state = newFocusedDay;
+          },
+        ),
+      ),
       ListView(
         shrinkWrap: true,
         children: getEventForDay(selectedDay)
@@ -163,7 +166,7 @@ int getHashCode(DateTime key) {
 }
 
 Future<Map<DateTime, List<Map<String, Object>>>> addEvents(
-    int year, int month, WidgetRef ref) async {
+    WidgetRef ref) async {
   final dao = TrainingLogDao();
   Map<DateTime, List<Map<String, Object>>> preEvents = {};
   final eventList = await dao.findAll();
@@ -218,7 +221,7 @@ Future<int> setDateProvider(WidgetRef ref) async {
   }
 }
 
-Future<List<int>> setTrainingAmount(int year, int month) async {
+Future<List<int>> getTrainingAmount(int year, int month) async {
   final dao = TrainingLogDao();
   final yearIds = await dao.findByYear(year);
   final monthIds = await dao.findByMonth(year, month);
@@ -234,4 +237,13 @@ Future<List<int>> setTrainingAmount(int year, int month) async {
   }
 
   return [yearSum, monthSum];
+}
+
+Future<List> getSnapshot(WidgetRef ref, DateTime focusedDay) async {
+  final dao = DistanceByCountDao();
+  await dao.initDistance();
+  final events = await addEvents(ref);
+  final trainingAmount =
+      await getTrainingAmount(focusedDay.year, focusedDay.month);
+  return [events, trainingAmount];
 }

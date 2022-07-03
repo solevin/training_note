@@ -48,5 +48,14 @@ class DBProvider {
                 memo TEXT
               )
             """);
+    database.execute("""
+            CREATE TABLE DistanceByCount
+              (
+                id INTEGER PRIMARY KEY,
+                kind INTEGER,
+                club TEXT,
+                distance INTEGER
+              )
+            """);
   }
 }
