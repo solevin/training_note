@@ -6,9 +6,7 @@ import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:training_note/home/home_page.dart';
-
-final indexProvider = StateProvider<int>((ref) => 0);
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TrainingLogPage extends HookConsumerWidget {
   static Route<dynamic> route({
@@ -30,6 +28,7 @@ class TrainingLogPage extends HookConsumerWidget {
     String score = ref.watch(scoreProvider);
     String memo = ref.watch(memoProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
+    int game = 1;
     final dao = TrainingLogDao();
     return Scaffold(
       appBar: AppBar(title: Text(date)),
@@ -43,23 +42,37 @@ class TrainingLogPage extends HookConsumerWidget {
             child: GestureDetector(
               onTap: () async {
                 int ballQuantityResult;
-                try{
+                try {
                   ballQuantityResult = int.parse(ballQuantity);
-                }catch(e){
+                } catch (e) {
                   ballQuantityResult = 0;
                 }
                 int scoreResult;
-                try{
+                try {
                   scoreResult = int.parse(score);
-                }catch(e){
+                } catch (e) {
                   scoreResult = 0;
                 }
+                if (scoreResult <= 0) {
+                  scoreResult = 0;
+                  game = 0;
+                } else {
+                  game = 1;
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  if (prefs.getInt('score') == null ||
+                      prefs.getInt('score')! > int.parse(score)) {
+                    prefs.setInt('bestscore', int.parse(score));
+                  }
+                }
+
                 final trainingLog = TrainingLog(
                   year: selectedDay.year,
                   month: selectedDay.month,
                   day: selectedDay.day,
                   ballQuantity: ballQuantityResult,
                   score: scoreResult,
+                  game: game,
                   memo: memo,
                 );
                 if (id >= 0) {
@@ -68,7 +81,7 @@ class TrainingLogPage extends HookConsumerWidget {
                   dao.create(trainingLog);
                 }
                 Navigator.of(context).push<dynamic>(
-                  HomePage.route(),
+                  CalendarPage.route(),
                 );
               },
               child: Container(

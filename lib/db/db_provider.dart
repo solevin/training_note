@@ -43,8 +43,18 @@ class DBProvider {
                 month INTEGER,
                 day INTEGER,
                 ballQuantity INTEGER,
+                game INTEGER,
                 score INTEGER,
                 memo TEXT
+              )
+            """);
+    database.execute("""
+            CREATE TABLE DistanceByCount
+              (
+                id INTEGER PRIMARY KEY,
+                kind INTEGER,
+                club TEXT,
+                distance INTEGER
               )
             """);
   }

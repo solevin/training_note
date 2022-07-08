@@ -5,6 +5,7 @@ class TrainingLog {
     required this.month,
     required this.day,
     required this.ballQuantity,
+    required this.game,
     required this.score,
     required this.memo,
   });
@@ -15,6 +16,7 @@ class TrainingLog {
         month= paramMap['month'] as int,
         day = paramMap['day'] as int,
         ballQuantity = paramMap['ballQuantity'] as int,
+        game = paramMap['game'] as int,
         score = paramMap['score'] as int,
         memo = paramMap['memo'] as String;
 
@@ -23,6 +25,7 @@ class TrainingLog {
   final int month;
   final int day;
   final int ballQuantity;
+  final int game;
   final int score;
   final String memo;
 
@@ -32,6 +35,7 @@ class TrainingLog {
         'month': month,
         'day': day,
         'ballQuantity': ballQuantity,
+        'game': game,
         'score': score,
         'memo': memo,
       };
