@@ -80,4 +80,29 @@ class DistanceByCountDao {
       }
     }
   }
+
+  Future<void> updateAll(List<int> woodDistance, List<int> utDistance,
+      List<int> ironDistance, List<int> wedgeDistance) async {
+    final db = await _dbProvider.database;
+    await db!.delete(tableNameDistanceByCount);
+    final clubList = [
+      ['1W', '3W', '4W', '5W', '7W', '9W'],
+      ['3U', '4U', '5U', '6U', '7U'],
+      ['3I', '4I', '5I', '6I', '7I', '8I', '9I'],
+      ['PW', 'AW', 'SW', 'LW'],
+    ];
+    final distanceList = [
+      woodDistance,
+      utDistance,
+      ironDistance,
+      wedgeDistance
+    ];
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < clubList[i].length; j++) {
+        final tmpDistance = DistanceByCount(
+            club: clubList[i][j], kind: i, distance: distanceList[i][j]);
+        await create(tmpDistance);
+      }
+    }
+  }
 }

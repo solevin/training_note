@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:training_note/db/distance_by_count_dao.dart';
 import 'package:training_note/ability/edit_distance_page.dart';
+import 'package:training_note/ability/edit_distance_view.dart';
 import 'package:training_note/home/home_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -57,7 +58,8 @@ class AbilityPage extends HookConsumerWidget {
                 width: 45.w,
                 color: Colors.blue,
                 child: GestureDetector(
-                  onTap: (() {
+                  onTap: (() async {
+                    await getDistanceList(ref);
                     Navigator.of(context).push<dynamic>(
                       EditDistancePage.route(),
                     );
@@ -115,26 +117,49 @@ Future<List<Widget>> distanceWidgetList() async {
   List<Widget> result = [];
 
   for (int i = 0; i < kinds.length; i++) {
-    final tmpWidget = Row(
-      children: [
-        Text(
-          kinds[i].club,
-          style: TextStyle(fontSize: 20.sp),
-        ),
-        Text(
-          ' : ',
-          style: TextStyle(fontSize: 20.sp),
-        ),
-        Text(
-          kinds[i].distance.toString(),
-          style: TextStyle(fontSize: 20.sp),
-        ),
-      ],
-    );
-    if (kinds[i].distance >= 0) {
+    final tmpWidget = Padding(
+        padding: EdgeInsets.all(8.r),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              kinds[i].club,
+              style: TextStyle(fontSize: 20.sp),
+            ),
+            Text(
+              ' : ',
+              style: TextStyle(fontSize: 20.sp),
+            ),
+            Text(
+              kinds[i].distance.toString(),
+              style: TextStyle(fontSize: 20.sp),
+            ),
+          ],
+        ));
+    if (kinds[i].distance > 0) {
       result.add(tmpWidget);
     }
   }
 
   return result;
+}
+
+Future<List<List<int>>> getDistanceList(WidgetRef ref) async {
+  final dao = DistanceByCountDao();
+  List<List<int>> distanceList = [];
+  for (int i = 0; i < 4; i++) {
+    final tmpIdList = await dao.findBykind(i);
+    List<int> tmpDistanceList = [];
+    for (int j = 0; j < tmpIdList.length; j++) {
+      final tmp = await dao.findById(tmpIdList[j]);
+      tmpDistanceList.add(tmp.distance);
+    }
+    distanceList.add(tmpDistanceList);
+  }
+  ref.read(woodDistanceProvider.notifier).state = distanceList[0];
+  ref.read(utDistanceProvider.notifier).state = distanceList[1];
+  ref.read(ironDistanceProvider.notifier).state = distanceList[2];
+  ref.read(wedgeDistanceProvider.notifier).state = distanceList[3];
+
+  return distanceList;
 }

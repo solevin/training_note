@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:training_note/ability/ability_page.dart';
 import 'package:training_note/ability/edit_distance_view.dart';
 import 'package:training_note/db/distance_by_count.dart';
 import 'package:training_note/db/distance_by_count_dao.dart';
@@ -17,32 +18,58 @@ class EditDistancePage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     List<bool> isSelected = ref.watch(isSelectedProvider);
+    List<int> woodDistance = ref.watch(woodDistanceProvider);
+    List<int> utDistance = ref.watch(utDistanceProvider);
+    List<int> ironDistance = ref.watch(ironDistanceProvider);
+    List<int> wedgeDistance = ref.watch(wedgeDistanceProvider);
+    final index = isSelected.indexOf(true);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: Text(
           'Edit',
           style: TextStyle(fontSize: 20.sp),
         ),
       ),
-      body: FutureBuilder(
-        future: getDistanceList(),
-        builder:
-            (BuildContext context, AsyncSnapshot<List<List<int>>> snapshot) {
-          if (snapshot.hasData) {
-            final index = isSelected.indexOf(true);
-            return Column(
-              children: [
-                selectKind(ref, isSelected),
-                selectEditWidget(index, ref, snapshot.data![index]),
-              ],
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.grey)),
-            );
-          }
-        },
+      body: Column(
+        children: [
+          selectKind(ref, isSelected),
+          selectEditWidget(
+            index,
+            ref,
+            woodDistance,
+            utDistance,
+            ironDistance,
+            wedgeDistance,
+          ),
+          Padding(
+            padding: EdgeInsets.all(15.h),
+            child: Container(
+              height: 35.h,
+              width: 60.w,
+              color: Colors.blue,
+              child: GestureDetector(
+                onTap: (() async {
+                  final dao = DistanceByCountDao();
+                  await dao.updateAll(
+                      woodDistance, utDistance, ironDistance, wedgeDistance);
+                  Navigator.of(context).push<dynamic>(
+                    AbilityPage.route(),
+                  );
+                }),
+                child: Center(
+                  child: Text(
+                    '保存',
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -100,74 +127,74 @@ Widget selectKind(WidgetRef ref, List<bool> isSelected) {
   );
 }
 
-Widget selectEditWidget(int select, WidgetRef ref, List<int> dinstanceList) {
+Widget selectEditWidget(int select, WidgetRef ref, List<int> woodDistance,
+    List<int> utDistance, List<int> ironDistance, List<int> wedgeDistance) {
   switch (select) {
     case 0:
-      return Center(child: editWood(ref, dinstanceList));
+      return Center(child: editWood(ref, woodDistance));
     case 1:
-      return editUt(ref, dinstanceList);
+      return editUt(ref, utDistance);
     case 2:
-      return editIron(ref, dinstanceList);
+      return editIron(ref, ironDistance);
     case 3:
-      return editWedge(ref, dinstanceList);
+      return editWedge(ref, wedgeDistance);
     default:
       return const CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white));
   }
 }
 
-Widget editWood(WidgetRef ref, List<int> dinstanceList) {
+Widget editWood(WidgetRef ref, List<int> distanceList) {
   return Column(
     children: [
-      inputEachClub(ref, dinstanceList, 0, 0),
-      inputEachClub(ref, dinstanceList, 1, 0),
-      inputEachClub(ref, dinstanceList, 2, 0),
-      inputEachClub(ref, dinstanceList, 3, 0),
-      inputEachClub(ref, dinstanceList, 4, 0),
-      inputEachClub(ref, dinstanceList, 5, 0),
+      inputEachClub(ref, 0, 0, distanceList),
+      inputEachClub(ref, 1, 0, distanceList),
+      inputEachClub(ref, 2, 0, distanceList),
+      inputEachClub(ref, 3, 0, distanceList),
+      inputEachClub(ref, 4, 0, distanceList),
+      inputEachClub(ref, 5, 0, distanceList),
     ],
   );
 }
 
-Widget editUt(WidgetRef ref, List<int> dinstanceList) {
+Widget editUt(WidgetRef ref, List<int> distanceList) {
   return Column(
     children: [
-      inputEachClub(ref, dinstanceList, 0, 1),
-      inputEachClub(ref, dinstanceList, 1, 1),
-      inputEachClub(ref, dinstanceList, 2, 1),
-      inputEachClub(ref, dinstanceList, 3, 1),
-      inputEachClub(ref, dinstanceList, 4, 1),
+      inputEachClub(ref, 0, 1, distanceList),
+      inputEachClub(ref, 1, 1, distanceList),
+      inputEachClub(ref, 2, 1, distanceList),
+      inputEachClub(ref, 3, 1, distanceList),
+      inputEachClub(ref, 4, 1, distanceList),
     ],
   );
 }
 
-Widget editIron(WidgetRef ref, List<int> dinstanceList) {
+Widget editIron(WidgetRef ref, List<int> distanceList) {
   return Column(
     children: [
-      inputEachClub(ref, dinstanceList, 0, 2),
-      inputEachClub(ref, dinstanceList, 1, 2),
-      inputEachClub(ref, dinstanceList, 2, 2),
-      inputEachClub(ref, dinstanceList, 3, 2),
-      inputEachClub(ref, dinstanceList, 4, 2),
-      inputEachClub(ref, dinstanceList, 5, 2),
-      inputEachClub(ref, dinstanceList, 6, 2),
+      inputEachClub(ref, 0, 2, distanceList),
+      inputEachClub(ref, 1, 2, distanceList),
+      inputEachClub(ref, 2, 2, distanceList),
+      inputEachClub(ref, 3, 2, distanceList),
+      inputEachClub(ref, 4, 2, distanceList),
+      inputEachClub(ref, 5, 2, distanceList),
+      inputEachClub(ref, 6, 2, distanceList),
     ],
   );
 }
 
-Widget editWedge(WidgetRef ref, List<int> dinstanceList) {
+Widget editWedge(WidgetRef ref, List<int> distanceList) {
   return Column(
     children: [
-      inputEachClub(ref, dinstanceList, 0, 3),
-      inputEachClub(ref, dinstanceList, 1, 3),
-      inputEachClub(ref, dinstanceList, 2, 3),
-      inputEachClub(ref, dinstanceList, 3, 3),
+      inputEachClub(ref, 0, 3, distanceList),
+      inputEachClub(ref, 1, 3, distanceList),
+      inputEachClub(ref, 2, 3, distanceList),
+      inputEachClub(ref, 3, 3, distanceList),
     ],
   );
 }
 
-Widget inputEachClub(
-    WidgetRef ref, List<int> dinstanceList, int num, int kind) {
+Widget inputEachClub(WidgetRef ref, int num, int kind, List<int> distanceList) {
   final kindList = ['W', 'U', 'I', 'W'];
   final woodNums = [1, 3, 4, 5, 7, 9];
   final utNums = [3, 4, 5, 6, 7];
@@ -205,7 +232,8 @@ Widget inputEachClub(
           child: TextField(
             style: TextStyle(fontSize: 15.sp),
             keyboardType: TextInputType.number,
-            controller: TextEditingController(text: dinstanceList[num].toString()),
+            controller:
+                TextEditingController(text: distanceList[num].toString()),
             decoration: const InputDecoration(
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.red),
@@ -215,19 +243,24 @@ Widget inputEachClub(
               ),
             ),
             onChanged: (text) {
-              dinstanceList[num] = int.parse(text);
+              List<int> tmpList = distanceList;
+              try {
+                tmpList[num] = int.parse(text);
+              } catch (e) {
+                tmpList[num] = distanceList[num];
+              }
               switch (kind) {
                 case 0:
-                  ref.read(woodDistanceProvider.notifier).state = dinstanceList;
+                  ref.read(woodDistanceProvider.notifier).state = tmpList;
                   break;
                 case 1:
-                  ref.read(utDistanceProvider.notifier).state = dinstanceList;
+                  ref.read(utDistanceProvider.notifier).state = tmpList;
                   break;
                 case 2:
-                  ref.read(ironDistanceProvider.notifier).state = dinstanceList;
+                  ref.read(ironDistanceProvider.notifier).state = tmpList;
                   break;
                 case 3:
-                  ref.read(wedgeDistanceProvider.notifier).state = dinstanceList;
+                  ref.read(wedgeDistanceProvider.notifier).state = tmpList;
                   break;
               }
             },
@@ -236,19 +269,4 @@ Widget inputEachClub(
       ],
     ),
   );
-}
-
-Future<List<List<int>>> getDistanceList() async {
-  final dao = DistanceByCountDao();
-  List<List<int>> distanceList = [];
-  for (int i = 0; i < 4; i++) {
-    final tmpIdList = await dao.findBykind(i);
-    List<int> tmpDistanceList = [];
-    for (int j = 0; j < tmpIdList.length; j++) {
-      final tmp = await dao.findById(tmpIdList[j]);
-      tmpDistanceList.add(tmp.distance);
-    }
-    distanceList.add(tmpDistanceList);
-  }
-  return distanceList;
 }
