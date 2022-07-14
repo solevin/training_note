@@ -57,5 +57,14 @@ class DBProvider {
                 distance INTEGER
               )
             """);
+    database.execute("""
+            CREATE TABLE TargetLog
+              (
+                id INTEGER PRIMARY KEY,
+                contents TEXT,
+                deadLine TEXT,
+                isAchieved INTEGER
+              )
+            """);
   }
 }
