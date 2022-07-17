@@ -5,27 +5,37 @@ import 'package:training_note/db/target_log.dart';
 class TargetLogDao {
   final DBProvider _dbProvider = DBProvider();
 
-  Future<int> create(TargetLog count) async {
+  Future<int> create(TargetLog target) async {
     final db = await _dbProvider.database;
-    final result = await db!.insert(tableNameTargetLog, count.toMapExceptId());
+    final result = await db!.insert(tableNameTargetLog, target.toMapExceptId());
     return result;
   }
 
   Future<List<TargetLog>> findAll() async {
     final db = await _dbProvider.database;
     final result = await db!.query(tableNameTargetLog);
-    final counts = List.generate(result.length, (i) {
+    final targets = List.generate(result.length, (i) {
       return TargetLog.fromMap(result[i]);
     });
-    return counts;
+    return targets;
+  }
+
+  Future<List<int>> findAllIds() async {
+    final db = await _dbProvider.database;
+    final result = await db!.query(tableNameTargetLog);
+    final targetIds = <int>[];
+    for (int i = 0; i < result.length; i++) {
+      targetIds.add(result[i]['id'] as int);
+    }
+    return targetIds;
   }
 
   Future<TargetLog> findById(int id) async {
     final db = await _dbProvider.database;
     final result =
         await db!.query(tableNameTargetLog, where: 'id=?', whereArgs: [id]);
-    final count = TargetLog.fromMap(result[0]);
-    return count;
+    final target = TargetLog.fromMap(result[0]);
+    return target;
   }
 
   Future<List<int>> findByDeadLine(String deadLine) async {
@@ -59,11 +69,11 @@ class TargetLogDao {
     return notAchievedList;
   }
 
-  Future<int> update(int id, TargetLog count) async {
+  Future<int> update(int id, TargetLog target) async {
     final db = await _dbProvider.database;
     final result = await db!.update(
       tableNameTargetLog,
-      count.toMapExceptId(),
+      target.toMapExceptId(),
       where: 'id=?',
       whereArgs: [id],
     );
