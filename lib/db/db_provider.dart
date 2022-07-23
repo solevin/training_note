@@ -66,5 +66,15 @@ class DBProvider {
                 isAchieved INTEGER
               )
             """);
+    database.execute("""
+            CREATE TABLE Advice
+              (
+                id INTEGER PRIMARY KEY,
+                contents TEXT,
+                date TEXT,
+                isAchieved INTEGER,
+                source TEXT
+              )
+            """);
   }
 }

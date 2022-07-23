@@ -1,28 +1,28 @@
 import 'package:training_note/db/constants.dart';
 import 'package:training_note/db/db_provider.dart';
-import 'package:training_note/db/target_log.dart';
+import 'package:training_note/db/advice.dart';
 
-class TargetLogDao {
+class AdviceDao {
   final DBProvider _dbProvider = DBProvider();
 
-  Future<int> create(TargetLog target) async {
+  Future<int> create(Advice target) async {
     final db = await _dbProvider.database;
-    final result = await db!.insert(tableNameTargetLog, target.toMapExceptId());
+    final result = await db!.insert(tableNameAdvice, target.toMapExceptId());
     return result;
   }
 
-  Future<List<TargetLog>> findAll() async {
+  Future<List<Advice>> findAll() async {
     final db = await _dbProvider.database;
-    final result = await db!.query(tableNameTargetLog);
+    final result = await db!.query(tableNameAdvice);
     final targets = List.generate(result.length, (i) {
-      return TargetLog.fromMap(result[i]);
+      return Advice.fromMap(result[i]);
     });
     return targets;
   }
 
   Future<List<int>> findAllIds() async {
     final db = await _dbProvider.database;
-    final result = await db!.query(tableNameTargetLog);
+    final result = await db!.query(tableNameAdvice);
     final targetIds = <int>[];
     for (int i = 0; i < result.length; i++) {
       targetIds.add(result[i]['id'] as int);
@@ -30,28 +30,28 @@ class TargetLogDao {
     return targetIds;
   }
 
-  Future<TargetLog> findById(int id) async {
+  Future<Advice> findById(int id) async {
     final db = await _dbProvider.database;
     final result =
-        await db!.query(tableNameTargetLog, where: 'id=?', whereArgs: [id]);
-    final target = TargetLog.fromMap(result[0]);
+        await db!.query(tableNameAdvice, where: 'id=?', whereArgs: [id]);
+    final target = Advice.fromMap(result[0]);
     return target;
   }
 
-  Future<List<int>> findByDeadLine(String deadLine) async {
+  Future<List<int>> findByDate(String date) async {
     final db = await _dbProvider.database;
-    final result = await db!
-        .query(tableNameTargetLog, where: 'deadLine=?', whereArgs: [deadLine]);
-    var deadLineList = <int>[];
+    final result =
+        await db!.query(tableNameAdvice, where: 'date=?', whereArgs: [date]);
+    var dateList = <int>[];
     for (var i = 0; i < result.length; i++) {
-      deadLineList.add(result[i]['id'] as int);
+      dateList.add(result[i]['id'] as int);
     }
-    return deadLineList;
+    return dateList;
   }
 
   Future<List<int>> findIsAchieved(int isAchieved) async {
     final db = await _dbProvider.database;
-    final result = await db!.query(tableNameTargetLog, where: 'isAchieved=1');
+    final result = await db!.query(tableNameAdvice, where: 'isAchieved=1');
     var achievedList = <int>[];
     for (var i = 0; i < result.length; i++) {
       achievedList.add(result[i]['id'] as int);
@@ -61,7 +61,7 @@ class TargetLogDao {
 
   Future<List<int>> findnotAchieved(int isAchieved) async {
     final db = await _dbProvider.database;
-    final result = await db!.query(tableNameTargetLog, where: 'isAchieved=0');
+    final result = await db!.query(tableNameAdvice, where: 'isAchieved=0');
     var notAchievedList = <int>[];
     for (var i = 0; i < result.length; i++) {
       notAchievedList.add(result[i]['id'] as int);
@@ -69,10 +69,10 @@ class TargetLogDao {
     return notAchievedList;
   }
 
-  Future<int> update(int id, TargetLog target) async {
+  Future<int> update(int id, Advice target) async {
     final db = await _dbProvider.database;
     final result = await db!.update(
-      tableNameTargetLog,
+      tableNameAdvice,
       target.toMapExceptId(),
       where: 'id=?',
       whereArgs: [id],

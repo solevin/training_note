@@ -1,27 +1,31 @@
-class TargetLog {
-  TargetLog({
+class Advice {
+  Advice({
     this.id,
     required this.contents,
-    required this.deadLine,
+    required this.date,
     required this.isAchieved,
+    required this.source,
   });
 
-  TargetLog.fromMap(Map<String, dynamic> paramMap)
+  Advice.fromMap(Map<String, dynamic> paramMap)
       : id = paramMap['id'] as int,
         contents = paramMap['contents'] as String,
-        deadLine = paramMap['deadLine'] as String,
-        isAchieved = paramMap['isAchieved'] as int;
+        date = paramMap['date'] as String,
+        isAchieved = paramMap['isAchieved'] as int,
+        source = paramMap['source'] as String;
 
   final int? id;
   final String contents;
-  final String deadLine;
+  final String date;
   final int isAchieved;
+  final String source;
 
   Map<String, dynamic> toMap() => <String, dynamic>{
         'id': id,
         'contents': contents,
-        'deadLine': deadLine,
+        'date': date,
         'isAchieved': isAchieved,
+        'source': source,
       };
 
   Map<String, dynamic> toMapExceptId() {
