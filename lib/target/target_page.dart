@@ -73,6 +73,7 @@ class TargetPage extends HookConsumerWidget {
               builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
                 if (snapshot.hasData) {
                   final targetList = ref.watch(targetListProvider);
+                  // ref.read(isDisplayProvider.notifier).state = true;
                   return Stack(
                     children: [
                       SingleChildScrollView(
@@ -117,23 +118,25 @@ Future<String> selectDate(BuildContext context) async {
   }
 }
 
-Widget eachTarget(TargetLog target, WidgetRef ref, int id) {
-  final isAchievedProvider = StateProvider.autoDispose<bool>((ref) => false);
+Widget eachTarget(TargetLog target, WidgetRef ref, int id, int index) {
   if (target.isAchieved == 1) {
-    ref.read(isAchievedProvider.notifier).state = true;
+    ref.read(isAchievedProvider.notifier).state[index] = true;
   }
-  bool isAchieved = ref.watch(isAchievedProvider);
+  List<bool> isAchieved = ref.watch(isAchievedProvider);
   return Padding(
     padding: EdgeInsets.all(8.r),
     child: Row(
-      // crossAxisAlignment:CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         Checkbox(
           activeColor: Colors.blue,
-          value: isAchieved,
+          value: isAchieved[index],
           onChanged: (value) async {
-            ref.read(isAchievedProvider.notifier).state = value!;
+            print('change');
+            print(value);
+            print(isAchieved);
+            isAchieved[index] = value!;
+            ref.read(isAchievedProvider.notifier).state = isAchieved;
             final achieve = target.isAchieved == 1 ? 0 : 1;
             final newTarget = TargetLog(
               contents: target.contents,
@@ -162,14 +165,24 @@ Future<bool> setTargetList(WidgetRef ref, BuildContext context) async {
   final dao = TargetLogDao();
   final targetLogIds = await dao.findAllIds();
   final isDisplay = ref.watch(isDisplayProvider);
+  int index = 0;
+  ref.read(isAchievedProvider.notifier).state = [];
   for (int i = 0; i < targetLogIds.length; i++) {
     final target = await dao.findById(targetLogIds[i]);
     if (isDisplay == true) {
       if (target.isAchieved == 0) {
-        targetList.add(eachTarget(target, ref, targetLogIds[i]));
+        final tmp = ref.watch(isAchievedProvider);
+        tmp.add(false);
+        ref.read(isAchievedProvider.notifier).state = tmp;
+        targetList.add(eachTarget(target, ref, targetLogIds[i], index));
+        index++;
       }
     } else {
-      targetList.add(eachTarget(target, ref, targetLogIds[i]));
+      final tmp = ref.watch(isAchievedProvider);
+      tmp.add(false);
+      ref.read(isAchievedProvider.notifier).state = tmp;
+      targetList.add(eachTarget(target, ref, targetLogIds[i], index));
+      index++;
     }
   }
   ref.read(targetListProvider.notifier).state = targetList;
