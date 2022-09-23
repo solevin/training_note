@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
+import 'package:training_note/training/set_training_page_view.dart';
 import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -21,79 +22,25 @@ class TrainingLogPage extends HookConsumerWidget {
   const TrainingLogPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    int id = ModalRoute.of(context)!.settings.arguments as int;
     DateTime selectedDay = ref.watch(selectedProvider);
     List<bool> isSelected = ref.watch(isSelectedProvider);
-    String ballQuantity = ref.watch(ballQuantityProvider);
-    String score = ref.watch(scoreProvider);
-    String memo = ref.watch(memoProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
-    int game = 1;
-    final dao = TrainingLogDao();
     return Scaffold(
       appBar: AppBar(title: Text(date)),
       body: Column(
         children: [
           isPractice(ref, isSelected),
-          isSelected[0] == true ? inputBallQuantity(ref) : inputScore(ref),
-          inputMemo(ref),
-          Padding(
-            padding: EdgeInsets.all(8.r),
-            child: GestureDetector(
-              onTap: () async {
-                int ballQuantityResult;
-                try {
-                  ballQuantityResult = int.parse(ballQuantity);
-                } catch (e) {
-                  ballQuantityResult = 0;
-                }
-                int scoreResult;
-                try {
-                  scoreResult = int.parse(score);
-                } catch (e) {
-                  scoreResult = 0;
-                }
-                if (scoreResult <= 0) {
-                  scoreResult = 0;
-                  game = 0;
-                } else {
-                  game = 1;
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  if (prefs.getInt('score') == null ||
-                      prefs.getInt('score')! > int.parse(score)) {
-                    prefs.setInt('bestscore', int.parse(score));
-                  }
-                }
-
-                final trainingLog = TrainingLog(
-                  year: selectedDay.year,
-                  month: selectedDay.month,
-                  day: selectedDay.day,
-                  ballQuantity: ballQuantityResult,
-                  score: scoreResult,
-                  game: game,
-                  memo: memo,
-                );
-                if (id >= 0) {
-                  await dao.update(id, trainingLog);
-                } else {
-                  dao.create(trainingLog);
-                }
-                Navigator.of(context).push<dynamic>(
-                  CalendarPage.route(),
-                );
-              },
-              child: Container(
-                height: 30.h,
-                width: 80.w,
-                color: Colors.blue,
-                child: Center(
-                  child: Text(
-                    'add',
-                    style: TextStyle(fontSize: 20.sp, color: Colors.white),
-                  ),
-                ),
+          SizedBox(
+            height: 530.h,
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  isSelected[0] == true
+                      ? inputBallQuantity(ref)
+                      : inputScore(ref),
+                  inputMemo(ref),
+                  addTraininglogButton(ref, context, selectedDay),
+                ],
               ),
             ),
           ),
@@ -145,9 +92,15 @@ Widget inputMemo(WidgetRef ref) {
   String text = ref.read(memoProvider);
   return Column(
     children: [
-      Text(
-        'メモ',
-        style: TextStyle(fontSize: 15.sp),
+      Align(
+        alignment: Alignment.centerLeft,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(15.w, 0, 0, 5.h),
+          child: Text(
+            'メモ',
+            style: TextStyle(fontSize: 20.sp),
+          ),
+        ),
       ),
       Padding(
         padding: EdgeInsets.fromLTRB(10.w, 0, 10.w, 0),
@@ -250,4 +203,81 @@ Widget inputScore(WidgetRef ref) {
       ),
     ],
   );
+}
+
+Widget addTraininglogButton(
+    WidgetRef ref, BuildContext context, DateTime selectedDay) {
+  int id = ModalRoute.of(context)!.settings.arguments as int;
+  String ballQuantity = ref.watch(ballQuantityProvider);
+  String score = ref.watch(scoreProvider);
+  String memo = ref.watch(memoProvider);
+  final dao = TrainingLogDao();
+  int game = 1;
+
+  return Padding(
+    padding: EdgeInsets.all(8.r),
+    child: GestureDetector(
+      onTap: () async {
+        int ballQuantityResult;
+        try {
+          ballQuantityResult = int.parse(ballQuantity);
+        } catch (e) {
+          ballQuantityResult = 0;
+        }
+        int scoreResult;
+        try {
+          scoreResult = int.parse(score);
+        } catch (e) {
+          scoreResult = 0;
+        }
+        if (scoreResult <= 0) {
+          scoreResult = 0;
+          game = 0;
+        } else {
+          game = 1;
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          if (prefs.getInt('score') == null ||
+              prefs.getInt('score')! > int.parse(score)) {
+            prefs.setInt('bestscore', int.parse(score));
+          }
+        }
+        final trainingLog = TrainingLog(
+          year: selectedDay.year,
+          month: selectedDay.month,
+          day: selectedDay.day,
+          ballQuantity: ballQuantityResult,
+          score: scoreResult,
+          game: game,
+          memo: memo,
+        );
+        if (id >= 0) {
+          await dao.update(id, trainingLog);
+        } else {
+          dao.create(trainingLog);
+        }
+        Navigator.of(context).push<dynamic>(
+          CalendarPage.route(),
+        );
+      },
+      child: Container(
+        height: 30.h,
+        width: 80.w,
+        color: Colors.blue,
+        child: Center(
+          child: Text(
+            'add',
+            style: TextStyle(fontSize: 20.sp, color: Colors.white),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget todaysPointWidgetList(WidgetRef ref) {
+  return ListView();
+}
+
+Widget eachTodaysPoint(WidgetRef ref) {
+  return Container();
 }

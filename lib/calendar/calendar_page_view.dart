@@ -6,3 +6,4 @@ final isSelectedProvider = StateProvider.autoDispose<List<bool>>((ref) => [true,
 final ballQuantityProvider = StateProvider.autoDispose<String>((ref) => '0');
 final scoreProvider = StateProvider.autoDispose<String>((ref) => '0');
 final memoProvider = StateProvider.autoDispose<String>((ref) => '');
+final idProvider = StateProvider.autoDispose<int>((ref) => -1);
