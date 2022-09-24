@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
-import 'package:training_note/training/set_training_page_view.dart';
+import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:training_note/training/set_training_page_view.dart';
+import 'package:training_note/training/training_log_page_view.dart';
 
 class TrainingLogPage extends HookConsumerWidget {
-  static Route<dynamic> route({
-    required int id,
-  }) {
+  static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const TrainingLogPage(),
-      settings: RouteSettings(arguments: id),
     );
   }
 
@@ -23,69 +22,27 @@ class TrainingLogPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     DateTime selectedDay = ref.watch(selectedProvider);
-    List<bool> isSelected = ref.watch(isSelectedProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
+    final isTraining = ref.read(isTrainingProvider);
     return Scaffold(
       appBar: AppBar(title: Text(date)),
       body: Column(
         children: [
-          isPractice(ref, isSelected),
-          SizedBox(
-            height: 530.h,
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  isSelected[0] == true
-                      ? inputBallQuantity(ref)
-                      : inputScore(ref),
-                  inputMemo(ref),
-                  addTraininglogButton(ref, context, selectedDay),
-                ],
-              ),
+          Padding(
+            padding: EdgeInsets.all(5.r),
+            child: Text(
+              '目標',
+              style: TextStyle(fontSize: 20.sp),
             ),
           ),
+          adviceListWidget(ref),
+          isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
+          inputMemo(ref),
+          addTraininglogButton(ref, context, selectedDay),
         ],
       ),
     );
   }
-}
-
-Widget isPractice(WidgetRef ref, List<bool> isSelected) {
-  return Padding(
-    padding: EdgeInsets.all(10.r),
-    child: Center(
-      child: ToggleButtons(
-        isSelected: isSelected,
-        onPressed: (index) {
-          List<bool> tmpList = [];
-          for (int i = 0; i < isSelected.length; i++) {
-            if (index == i) {
-              tmpList.add(true);
-            } else {
-              tmpList.add(false);
-            }
-          }
-          ref.read(isSelectedProvider.notifier).state = tmpList;
-        },
-        children: [
-          Padding(
-            padding: EdgeInsets.all(10.r),
-            child: Text(
-              '練習',
-              style: TextStyle(fontSize: 20.sp),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.all(10.r),
-            child: Text(
-              'コース',
-              style: TextStyle(fontSize: 20.sp),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
 }
 
 Widget inputMemo(WidgetRef ref) {
@@ -207,7 +164,8 @@ Widget inputScore(WidgetRef ref) {
 
 Widget addTraininglogButton(
     WidgetRef ref, BuildContext context, DateTime selectedDay) {
-  int id = ModalRoute.of(context)!.settings.arguments as int;
+  // int id = ModalRoute.of(context)!.settings.arguments as int;
+  final id = ref.read(idProvider);
   String ballQuantity = ref.watch(ballQuantityProvider);
   String score = ref.watch(scoreProvider);
   String memo = ref.watch(memoProvider);
@@ -274,10 +232,47 @@ Widget addTraininglogButton(
   );
 }
 
-Widget todaysPointWidgetList(WidgetRef ref) {
-  return ListView();
+Widget adviceListWidget(WidgetRef ref) {
+  return SingleChildScrollView(
+    child: SizedBox(
+      height: 150.h,
+      child: ListView(
+        children: adviceListContents(ref),
+      ),
+    ),
+  );
 }
 
-Widget eachTodaysPoint(WidgetRef ref) {
-  return Container();
+List<Widget> adviceListContents(WidgetRef ref) {
+  final contentsList = <Widget>[];
+  final decideAdviceList = ref.read(decideAdviceListProvider);
+  for (int i = 0; i < decideAdviceList.length; i++) {
+    final advice = decideAdviceList[i];
+    contentsList.add(adviceContent(ref, advice, i));
+  }
+  return contentsList;
+}
+
+Widget adviceContent(WidgetRef ref, Advice advice, int index) {
+  final isCheckedList = ref.watch(achieveCheckboxListProvider);
+  return Center(
+    child: Padding(
+      padding: EdgeInsets.all(5.r),
+      child: Row(
+        children: [
+          Checkbox(
+              value: isCheckedList[index],
+              onChanged: (value) {
+                var tmp = isCheckedList;
+                tmp[index] = value!;
+                ref.read(achieveCheckboxListProvider.notifier).state = [...tmp];
+              }),
+          Text(
+            advice.contents,
+            style: TextStyle(fontSize: 20.sp),
+          ),
+        ],
+      ),
+    ),
+  );
 }

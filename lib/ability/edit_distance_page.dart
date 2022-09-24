@@ -17,7 +17,7 @@ class EditDistancePage extends HookConsumerWidget {
   const EditDistancePage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<bool> isSelected = ref.watch(isSelectedProvider);
+    List<bool> isSelected = ref.watch(isSelectedClubProvider);
     List<int> woodDistance = ref.watch(woodDistanceProvider);
     List<int> utDistance = ref.watch(utDistanceProvider);
     List<int> ironDistance = ref.watch(ironDistanceProvider);
@@ -90,7 +90,7 @@ Widget selectKind(WidgetRef ref, List<bool> isSelected) {
               tmpList.add(false);
             }
           }
-          ref.read(isSelectedProvider.notifier).state = tmpList;
+          ref.read(isSelectedClubProvider.notifier).state = tmpList;
         },
         children: [
           Padding(

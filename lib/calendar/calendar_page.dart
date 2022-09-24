@@ -140,7 +140,7 @@ Widget futureCalendar(DateTime focusedDay, DateTime selectedDay, List snapshot,
             } else {
               final id = await setDateProvider(ref, selectedDay);
               Navigator.of(context).push<dynamic>(
-                TrainingLogPage.route(id: id),
+                TrainingLogPage.route(),
               );
             }
           },
@@ -267,13 +267,9 @@ Future<List<Advice>> setAdviceList(WidgetRef ref) async {
   final dao = AdviceDao();
   final adviceList = await dao.findAll();
   final initCheckList = <bool>[];
-  final check = ref.watch(checkboxListProvider);
   for (int i = 0; i < adviceList.length; i++) {
     initCheckList.add(false);
   }
-  while (check.isEmpty) {
-    await Future.delayed(Duration(milliseconds: 10));
-    ref.read(checkboxListProvider.notifier).state = initCheckList;
-  }
+  ref.read(checkboxListProvider.notifier).state = [...initCheckList];
   return adviceList;
 }

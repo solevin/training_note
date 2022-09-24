@@ -3,8 +3,10 @@ import 'package:training_note/db/advice.dart';
 import 'package:intl/intl.dart';
 import 'package:training_note/db/advice_dao.dart';
 import 'package:training_note/training/set_training_page_view.dart';
+import 'package:training_note/training/training_log_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:training_note/training/training_log_page_view.dart';
 
 class SetTrainingPage extends HookConsumerWidget {
   static Route<dynamic> route() {
@@ -16,38 +18,46 @@ class SetTrainingPage extends HookConsumerWidget {
   const SetTrainingPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    bool isTraining = ref.watch(isTrainingProvider);
+
     return Scaffold(
       appBar: AppBar(
-          title: Text(
-            'Advice',
-            style: TextStyle(fontSize: 20.sp),
-          ),
-          automaticallyImplyLeading: false),
+        title: Text(
+          'Advice',
+          style: TextStyle(fontSize: 20.sp),
+        ),
+        // automaticallyImplyLeading: false,
+      ),
       body: FutureBuilder(
         future: setAdviceList(ref),
         builder: (BuildContext context, AsyncSnapshot<List<Advice>> snapshot) {
           if (snapshot.hasData) {
+            final adviceList = snapshot.data!;
             return Column(
               children: [
+                isPractice(ref, isTraining),
                 SingleChildScrollView(
                   child: SizedBox(
                     height: 200.h,
                     child: ListView(
-                      children: adviceWidgetList(ref, snapshot.data!),
+                      children: adviceWidgetList(ref, adviceList),
                     ),
                   ),
                 ),
-                // Container(
-                //   width: 30.w,
-                //   height: 30.h,
-                //   color: Colors.green,
-                //   child: GestureDetector(
-                //     onTap: () {
-                //       ref.read(selectProvider.notifier).state = !display;
-                //       // ref.read(checkBoxProvider.notifier).check(0);
-                //     },
-                //   ),
-                // )
+                Container(
+                  width: 30.w,
+                  height: 30.h,
+                  color: Colors.green,
+                  child: GestureDetector(
+                    onTap: () {
+                      decideAdvice(ref, adviceList);
+                      initAchieveCheckboxList(ref);
+                      Navigator.of(context).push<dynamic>(
+                        TrainingLogPage.route(),
+                      );
+                    },
+                  ),
+                )
               ],
             );
           } else {
@@ -108,4 +118,64 @@ Future<List<Advice>> setAdviceList(WidgetRef ref) async {
     ref.read(checkboxListProvider.notifier).state = initCheckList;
   }
   return adviceList;
+}
+
+Widget isPractice(WidgetRef ref, bool isTraining) {
+  List<bool> isSelected = [];
+  if (isTraining) {
+    isSelected = [true, false];
+  } else {
+    isSelected = [false, true];
+  }
+  return Padding(
+    padding: EdgeInsets.all(10.r),
+    child: Center(
+      child: ToggleButtons(
+        isSelected: isSelected,
+        onPressed: (index) {
+          if (index == 0) {
+            ref.read(isTrainingProvider.notifier).state = true;
+          } else {
+            ref.read(isTrainingProvider.notifier).state = false;
+          }
+        },
+        children: [
+          Padding(
+            padding: EdgeInsets.all(10.r),
+            child: Text(
+              '練習',
+              style: TextStyle(fontSize: 20.sp),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.all(10.r),
+            child: Text(
+              'コース',
+              style: TextStyle(fontSize: 20.sp),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+void decideAdvice(WidgetRef ref, List<Advice> adviceList) {
+  final checkboxList = ref.read(checkboxListProvider);
+  List<Advice> decideAdviceList = [];
+  for (int i = 0; i < checkboxList.length; i++) {
+    if (checkboxList[i]) {
+      decideAdviceList.add(adviceList[i]);
+    }
+  }
+  ref.read(decideAdviceListProvider.notifier).state = [...decideAdviceList];
+}
+
+void initAchieveCheckboxList(WidgetRef ref) {
+  final decideAdviceList = ref.watch(decideAdviceListProvider);
+  final checkboxList = <bool>[];
+  for (int i = 0; i < decideAdviceList.length; i++) {
+    checkboxList.add(false);
+  }
+  ref.read(achieveCheckboxListProvider.notifier).state = [...checkboxList];
 }

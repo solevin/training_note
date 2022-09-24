@@ -1,6 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-final isSelectedProvider =
+final isSelectedClubProvider =
     StateProvider.autoDispose<List<bool>>((ref) => [true, false, false, false]);
 final woodDistanceProvider =
     StateProvider<List<int>>((ref) => [0, 0, 0, 0, 0, 0]);
