@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
     return ScreenUtilInit(
       builder: (context, child) {
         return MaterialApp(
-          title: 'Race Simulator',
+          title: 'Training Logs',
           theme: ThemeData(
             primarySwatch: Colors.blue,
           ),

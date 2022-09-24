@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'dart:collection';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/distance_by_count_dao.dart';
 import 'package:training_note/home/home_view.dart';
-import 'package:training_note/calendar/training_log_page.dart';
+import 'package:training_note/training/training_log_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
+import 'package:training_note/training/set_training_page.dart';
+import 'package:training_note/training/set_training_page_view.dart';
 import 'package:training_note/db/training_log_dao.dart';
+import 'package:training_note/db/advice_dao.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -28,6 +32,18 @@ class CalendarPage extends HookConsumerWidget {
             style: TextStyle(fontSize: 20.sp),
           ),
           automaticallyImplyLeading: false),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.golf_course),
+        onPressed: () async {
+          ref.read(idProvider.notifier).state =
+              await setDateProvider(ref, DateTime.now());
+          // ref.read(checkBoxProvider.notifier).init(adviceList.length);
+          Navigator.of(context).push<dynamic>(
+            SetTrainingPage.route(),
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: FutureBuilder(
         future: getSnapshot(ref, focusedDay),
         builder: (BuildContext context, AsyncSnapshot<List> snapshot) {
@@ -122,9 +138,9 @@ Widget futureCalendar(DateTime focusedDay, DateTime selectedDay, List snapshot,
               ref.read(focusProvider.notifier).state = newFocusedDay;
               getEventForDay(selectedDay);
             } else {
-              final id = await setDateProvider(ref);
+              final id = await setDateProvider(ref, selectedDay);
               Navigator.of(context).push<dynamic>(
-                TrainingLogPage.route(id: id),
+                TrainingLogPage.route(),
               );
             }
           },
@@ -201,9 +217,8 @@ Future<Map<DateTime, List<Map<String, Object>>>> addEvents(
   return preEvents;
 }
 
-Future<int> setDateProvider(WidgetRef ref) async {
+Future<int> setDateProvider(WidgetRef ref, DateTime selectedDay) async {
   final dao = TrainingLogDao();
-  final selectedDay = ref.read(selectedProvider);
   final eventId =
       await dao.findByDay(selectedDay.year, selectedDay.month, selectedDay.day);
   if (eventId.isNotEmpty) {
@@ -246,4 +261,15 @@ Future<List> getSnapshot(WidgetRef ref, DateTime focusedDay) async {
   final trainingAmount =
       await getTrainingAmount(focusedDay.year, focusedDay.month);
   return [events, trainingAmount];
+}
+
+Future<List<Advice>> setAdviceList(WidgetRef ref) async {
+  final dao = AdviceDao();
+  final adviceList = await dao.findAll();
+  final initCheckList = <bool>[];
+  for (int i = 0; i < adviceList.length; i++) {
+    initCheckList.add(false);
+  }
+  ref.read(checkboxListProvider.notifier).state = [...initCheckList];
+  return adviceList;
 }
