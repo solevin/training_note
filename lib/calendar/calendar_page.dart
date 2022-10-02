@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:collection';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/distance_by_count_dao.dart';
 import 'package:training_note/home/home_view.dart';
 import 'package:training_note/training/training_log_page.dart';
@@ -38,6 +37,7 @@ class CalendarPage extends HookConsumerWidget {
           ref.read(idProvider.notifier).state =
               await setDateProvider(ref, DateTime.now());
           // ref.read(checkBoxProvider.notifier).init(adviceList.length);
+          await setAdviceList(ref);
           Navigator.of(context).push<dynamic>(
             SetTrainingPage.route(),
           );
@@ -138,7 +138,9 @@ Widget futureCalendar(DateTime focusedDay, DateTime selectedDay, List snapshot,
               ref.read(focusProvider.notifier).state = newFocusedDay;
               getEventForDay(selectedDay);
             } else {
-              final id = await setDateProvider(ref, selectedDay);
+              ref.read(idProvider.notifier).state =
+                  await setDateProvider(ref, selectedDay);
+              await setAdviceList(ref);
               Navigator.of(context).push<dynamic>(
                 TrainingLogPage.route(),
               );
@@ -263,7 +265,7 @@ Future<List> getSnapshot(WidgetRef ref, DateTime focusedDay) async {
   return [events, trainingAmount];
 }
 
-Future<List<Advice>> setAdviceList(WidgetRef ref) async {
+Future<void> setAdviceList(WidgetRef ref) async {
   final dao = AdviceDao();
   final adviceList = await dao.findAll();
   final initCheckList = <bool>[];
@@ -271,5 +273,5 @@ Future<List<Advice>> setAdviceList(WidgetRef ref) async {
     initCheckList.add(false);
   }
   ref.read(checkboxListProvider.notifier).state = [...initCheckList];
-  return adviceList;
+  ref.read(adviceListProvider.notifier).state = [...adviceList];
 }

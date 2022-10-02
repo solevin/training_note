@@ -165,12 +165,12 @@ Widget inputScore(WidgetRef ref) {
 Widget addTraininglogButton(
     WidgetRef ref, BuildContext context, DateTime selectedDay) {
   // int id = ModalRoute.of(context)!.settings.arguments as int;
-  final id = ref.read(idProvider);
+  final id = ref.watch(idProvider);
   String ballQuantity = ref.watch(ballQuantityProvider);
   String score = ref.watch(scoreProvider);
   String memo = ref.watch(memoProvider);
   final dao = TrainingLogDao();
-  int game = 1;
+  int isgame = 1;
 
   return Padding(
     padding: EdgeInsets.all(8.r),
@@ -190,9 +190,9 @@ Widget addTraininglogButton(
         }
         if (scoreResult <= 0) {
           scoreResult = 0;
-          game = 0;
+          isgame = 0;
         } else {
-          game = 1;
+          isgame = 1;
           SharedPreferences prefs = await SharedPreferences.getInstance();
           if (prefs.getInt('score') == null ||
               prefs.getInt('score')! > int.parse(score)) {
@@ -205,7 +205,7 @@ Widget addTraininglogButton(
           day: selectedDay.day,
           ballQuantity: ballQuantityResult,
           score: scoreResult,
-          game: game,
+          isgame: isgame,
           memo: memo,
         );
         if (id >= 0) {
