@@ -5,7 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 final isDisplayProvider = StateProvider.autoDispose<bool>((ref) => false);
 final isVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);
 final isAchievedProvider = StateProvider<List<bool>>((ref) => []);
-final adviceListProvider = StateProvider.autoDispose<List<Widget>>((ref) => []);
+final adviceListViewProvider = StateProvider.autoDispose<List<Widget>>((ref) => []);
 final contentsProvider = StateProvider.autoDispose<String>((ref) => '');
 final sourceProvider = StateProvider.autoDispose<String>((ref) => '');
 final dateProvider = StateProvider.autoDispose<String>(

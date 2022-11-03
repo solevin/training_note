@@ -132,9 +132,9 @@ Widget eachTarget(TargetLog target, WidgetRef ref, int id, int index) {
           activeColor: Colors.blue,
           value: isAchieved[index],
           onChanged: (value) async {
-            print('change');
-            print(value);
-            print(isAchieved);
+            // print('change');
+            // print(value);
+            // print(isAchieved);
             isAchieved[index] = value!;
             ref.read(isAchievedProvider.notifier).state = isAchieved;
             final achieve = target.isAchieved == 1 ? 0 : 1;

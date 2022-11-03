@@ -19,7 +19,6 @@ class AdvicePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final visible = ref.watch(isVisibleProvider);
     final display = ref.watch(isDisplayProvider);
-    final int count = ref.watch(indexProvider);
     return Scaffold(
       appBar: AppBar(
           title: Text(
@@ -47,10 +46,10 @@ class AdvicePage extends HookConsumerWidget {
               ],
             ),
             FutureBuilder(
-              future: setAdviceList(ref, context),
+              future: setAdviceListView(ref, context),
               builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
                 if (snapshot.hasData) {
-                  final adviceList = ref.watch(adviceListProvider);
+                  final adviceList = ref.watch(adviceListViewProvider);
                   // ref.read(isDisplayProvider.notifier).state = true;
                   return Stack(
                     children: [
@@ -98,7 +97,9 @@ Future<String> selectDate(BuildContext context) async {
 
 Widget eachAdvice(Advice advice, WidgetRef ref, int id, int index) {
   if (advice.isAchieved == 1) {
-    ref.read(isAchievedProvider.notifier).state[index] = true;
+    final tmp = ref.watch(isAchievedProvider);
+    tmp[index] = true;
+    ref.read(isAchievedProvider.notifier).state = [...tmp];
   }
   List<bool> isAchieved = ref.watch(isAchievedProvider);
   return Padding(
@@ -110,9 +111,6 @@ Widget eachAdvice(Advice advice, WidgetRef ref, int id, int index) {
           activeColor: Colors.blue,
           value: isAchieved[index],
           onChanged: (value) async {
-            print('change');
-            print(value);
-            print(isAchieved);
             isAchieved[index] = value!;
             ref.read(isAchievedProvider.notifier).state = isAchieved;
             final achieve = advice.isAchieved == 1 ? 0 : 1;
@@ -143,7 +141,7 @@ Widget eachAdvice(Advice advice, WidgetRef ref, int id, int index) {
   );
 }
 
-Future<bool> setAdviceList(WidgetRef ref, BuildContext context) async {
+Future<bool> setAdviceListView(WidgetRef ref, BuildContext context) async {
   List<Widget> adviceList = [];
   final dao = AdviceDao();
   final adviceLogIds = await dao.findAllIds();
@@ -156,20 +154,20 @@ Future<bool> setAdviceList(WidgetRef ref, BuildContext context) async {
       if (advice.isAchieved == 0) {
         final tmp = ref.watch(isAchievedProvider);
         tmp.add(false);
-        ref.read(isAchievedProvider.notifier).state = tmp;
+        ref.read(isAchievedProvider.notifier).state = [...tmp];
         adviceList.add(eachAdvice(advice, ref, adviceLogIds[i], index));
         index++;
       }
     } else {
       final tmp = ref.watch(isAchievedProvider);
       tmp.add(false);
-      ref.read(isAchievedProvider.notifier).state = tmp;
+      ref.read(isAchievedProvider.notifier).state = [...tmp];
       adviceList.add(eachAdvice(advice, ref, adviceLogIds[i], index));
       index++;
     }
   }
-  ref.read(adviceListProvider.notifier).state = adviceList;
-  ref.watch(adviceListProvider);
+  ref.read(adviceListViewProvider.notifier).state = [...adviceList];
+  ref.watch(adviceListViewProvider);
   return true;
 }
 
