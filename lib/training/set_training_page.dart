@@ -102,13 +102,13 @@ Future<List<Advice>> setAdviceList(WidgetRef ref) async {
   // ref.read(checkboxListProvider.notifier).state = [...initCheckList];
   final check = ref.watch(checkboxListProvider);
   if (adviceList.length > check.length) {
-    print('object');
+    // print('object');
   }
   while (adviceList.length > check.length) {
     await Future.delayed(const Duration(milliseconds: 20));
     ref.read(checkboxListProvider.notifier).state = [...initCheckList];
   }
-  print('1');
+  // print('1');
   return adviceList;
 }
 

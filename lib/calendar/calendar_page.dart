@@ -23,7 +23,7 @@ class CalendarPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     DateTime focusedDay = ref.watch(focusProvider);
-    DateTime selectedDay = ref.watch(selectedProvider);
+    DateTime selectedDay = ref.watch(selectedDayProvider);
     return Scaffold(
       appBar: AppBar(
           title: Text(
@@ -35,7 +35,8 @@ class CalendarPage extends HookConsumerWidget {
         child: const Icon(Icons.golf_course),
         onPressed: () async {
           ref.read(idProvider.notifier).state =
-              await setDateProvider(ref, DateTime.now());
+              await setDateProvider(ref);
+
           // ref.read(checkBoxProvider.notifier).init(adviceList.length);
           await setAdviceList(ref);
           Navigator.of(context).push<dynamic>(
@@ -134,12 +135,12 @@ Widget futureCalendar(DateTime focusedDay, DateTime selectedDay, List snapshot,
           },
           onDaySelected: (newSelectedDay, newFocusedDay) async {
             if (!isSameDay(selectedDay, newSelectedDay)) {
-              ref.read(selectedProvider.notifier).state = newSelectedDay;
+              ref.read(selectedDayProvider.notifier).state = newSelectedDay;
               ref.read(focusProvider.notifier).state = newFocusedDay;
               getEventForDay(selectedDay);
             } else {
               ref.read(idProvider.notifier).state =
-                  await setDateProvider(ref, selectedDay);
+                  await setDateProvider(ref);
               await setAdviceList(ref);
               Navigator.of(context).push<dynamic>(
                 TrainingLogPage.route(),
@@ -219,16 +220,20 @@ Future<Map<DateTime, List<Map<String, Object>>>> addEvents(
   return preEvents;
 }
 
-Future<int> setDateProvider(WidgetRef ref, DateTime selectedDay) async {
+Future<int> setDateProvider(WidgetRef ref) async {
   final dao = TrainingLogDao();
+  final selectedDay = ref.watch(selectedDayProvider);
   final eventId =
       await dao.findByDay(selectedDay.year, selectedDay.month, selectedDay.day);
+  // print(eventId);
+  // print(selectedDay);
   if (eventId.isNotEmpty) {
     final event = await dao.findById(eventId[0]);
     ref.read(ballQuantityProvider.notifier).state =
         event.ballQuantity.toString();
     ref.read(scoreProvider.notifier).state = event.score.toString();
     ref.read(memoProvider.notifier).state = event.memo;
+    // print(eventId);
     return eventId[0];
   } else {
     ref.read(ballQuantityProvider.notifier).state = '0';

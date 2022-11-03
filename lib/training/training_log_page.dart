@@ -21,7 +21,7 @@ class TrainingLogPage extends HookConsumerWidget {
   const TrainingLogPage({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    DateTime selectedDay = ref.watch(selectedProvider);
+    DateTime selectedDay = ref.watch(selectedDayProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
     final isTraining = ref.read(isTrainingProvider);
     return Scaffold(
@@ -216,6 +216,7 @@ Widget addTraininglogButton(
         Navigator.of(context).push<dynamic>(
           CalendarPage.route(),
         );
+        // print(id);
       },
       child: Container(
         height: 30.h,
