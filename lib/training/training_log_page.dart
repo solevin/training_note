@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/calendar/calendar_page.dart';
@@ -10,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:training_note/training/set_training_page_view.dart';
 import 'package:training_note/training/training_log_page_view.dart';
+import 'package:image_picker/image_picker.dart';
 
 class TrainingLogPage extends HookConsumerWidget {
   static Route<dynamic> route() {
@@ -37,11 +40,52 @@ class TrainingLogPage extends HookConsumerWidget {
           ),
           adviceListWidget(ref),
           isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
+          shootPhotoWidget(ref),
           inputMemo(ref),
           addTraininglogButton(ref, context, selectedDay),
         ],
       ),
     );
+  }
+}
+
+Widget shootPhotoWidget(WidgetRef ref) {
+  final testImage = ref.watch(testImageprovider);
+  return Column(
+    children: [
+      testImage,
+      Container(
+        height: 30.h,
+        width: 50.w,
+        color: Colors.green,
+        child: GestureDetector(
+          onTap: () async {
+            getImage(ref);
+          },
+        ),
+      ),
+    ],
+  );
+}
+
+Future<void> getImage(WidgetRef ref) async {
+  final picker = ImagePicker();
+  try {
+    final pickedFile = await picker.getImage(source: ImageSource.camera);
+    if (pickedFile == null) {
+      return;
+    }
+    final pickedImage = File(pickedFile.path);
+    final newImage = Padding(
+      padding: EdgeInsets.all(8.r),
+      child: SizedBox(
+        height: 100.h,
+        child: Image.file(pickedImage),
+      ),
+    );
+    ref.read(testImageprovider.notifier).state = newImage;
+  } catch (e) {
+    print('Failed to pick image: $e');
   }
 }
 
