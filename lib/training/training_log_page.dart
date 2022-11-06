@@ -40,7 +40,8 @@ class TrainingLogPage extends HookConsumerWidget {
           ),
           adviceListWidget(ref),
           isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
-          shootPhotoWidget(ref),
+          photoListWidget(ref),
+          shootPhotoButton(ref),
           inputMemo(ref),
           addTraininglogButton(ref, context, selectedDay),
         ],
@@ -49,22 +50,34 @@ class TrainingLogPage extends HookConsumerWidget {
   }
 }
 
-Widget shootPhotoWidget(WidgetRef ref) {
-  final testImage = ref.watch(testImageprovider);
-  return Column(
-    children: [
-      testImage,
-      Container(
-        height: 30.h,
-        width: 50.w,
-        color: Colors.green,
-        child: GestureDetector(
-          onTap: () async {
-            getImage(ref);
-          },
-        ),
+Widget photoListWidget(WidgetRef ref) {
+  return Padding(
+    padding: EdgeInsets.all(10.r),
+    child: Row(
+      children: ref.watch(imageListprovider),
+    ),
+  );
+}
+
+List<Widget> getPhotoList(WidgetRef ref) {
+  final List<Widget> result = [];
+
+  return result;
+}
+
+Widget shootPhotoButton(WidgetRef ref) {
+  return Padding(
+    padding: EdgeInsets.all(10.r),
+    child: Container(
+      height: 30.h,
+      width: 50.w,
+      color: Colors.green,
+      child: GestureDetector(
+        onTap: () async {
+          getImage(ref);
+        },
       ),
-    ],
+    ),
   );
 }
 
@@ -83,10 +96,20 @@ Future<void> getImage(WidgetRef ref) async {
         child: Image.file(pickedImage),
       ),
     );
-    ref.read(testImageprovider.notifier).state = newImage;
+    final tmpList = ref.watch(imageListprovider);
+    tmpList.add(newImage);
+    ref.read(imageListprovider.notifier).state = [...tmpList];
   } catch (e) {
     print('Failed to pick image: $e');
   }
+  // final test =
+  //     '/storage/emulated/0/Android/data/com.example.training_note/files/Pictures/fa444e1a-685c-44c8-a278-d9c0735b0bb46766786158694208960.jpg';
+  // final match = RegExp(r'\....').allMatches(test);
+  // print(test);
+  // print(match.length);
+  // print(match.elementAt(0).group(0));
+  // print(match.elementAt(1).group(0));
+  // print(match.elementAt(match.length - 1).group(0));
 }
 
 Widget inputMemo(WidgetRef ref) {
