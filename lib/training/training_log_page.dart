@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
+import 'package:training_note/training/display_image_page.dart';
 import 'package:training_note/training/play_video_page.dart';
 import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/training_log.dart';
@@ -86,7 +87,7 @@ Widget shootPhotoButton(BuildContext context, WidgetRef ref) {
                 title: Text("タイトル"),
                 children: <Widget>[
                   SimpleDialogOption(
-                    onPressed: () => getImage(ref),
+                    onPressed: () => getImage(ref, context),
                     child: Text("写真"),
                   ),
                   SimpleDialogOption(
@@ -103,7 +104,7 @@ Widget shootPhotoButton(BuildContext context, WidgetRef ref) {
   );
 }
 
-Future<void> getImage(WidgetRef ref) async {
+Future<void> getImage(WidgetRef ref, BuildContext context) async {
   final picker = ImagePicker();
   try {
     final pickedFile = await picker.getImage(source: ImageSource.camera);
@@ -116,12 +117,23 @@ Future<void> getImage(WidgetRef ref) async {
       padding: EdgeInsets.all(8.r),
       child: SizedBox(
         height: 100.h,
-        child: Image.file(pickedImage),
+        child: Builder(builder: (context) {
+          return GestureDetector(
+            child: Image.file(pickedImage),
+            onTap: () {
+              ref.read(imageFileProvider.notifier).state = pickedImage;
+              Navigator.of(context).push<dynamic>(
+                DisplayImagePage.route(),
+              );
+            },
+          );
+        }),
       ),
     );
     final tmpList = ref.watch(imageListprovider);
     tmpList.add(newImage);
     ref.read(imageListprovider.notifier).state = [...tmpList];
+    Navigator.pop(context);
   } catch (e) {
     print('Failed to pick image: $e');
   }
@@ -137,7 +149,6 @@ Future<void> getImage(WidgetRef ref) async {
 
 Future<void> getVideo(WidgetRef ref, BuildContext context) async {
   final picker = ImagePicker();
-  VideoPlayerController controller;
   try {
     final pickedFile = await picker.getVideo(source: ImageSource.camera);
     if (pickedFile == null) {
@@ -149,44 +160,25 @@ Future<void> getVideo(WidgetRef ref, BuildContext context) async {
       padding: EdgeInsets.all(8.r),
       child: SizedBox(
         height: 100.h,
-        // decoration: BoxDecoration(border: Border.all(color: Colors.black)),
-        // child: GestureDetector(
-        //   // child: VideoPlayer(controller),
-        //   onTap: () async {
-        //     print('start');
-        //     await ref.read(videoControllerProvider.notifier).state.initialize().then(
-        //       (_) {
-        //         ref.read(videoControllerProvider.notifier).state.play();
-        //       },
-        //     );
-        //     print('stop');
-        //   },
-        // ),
-        // child: AspectRatio(
-        //   aspectRatio: controller.value.aspectRatio,
-        //   // 動画を表示
-        //   child: VideoPlayer(controller),
-        // ),
-        child: Builder(
-          builder: (context) {
-            return GestureDetector(
-              child: thumbNail,
-              onTap: () {
-                print('object');
-                ref.read(videoFileProvider.notifier).state = pickedVideo;
-                print('object');
-                Navigator.of(context).push<dynamic>(
-                  PlayVideoPage.route(),
-                );
-              },
-            );
-          }
-        ),
+        child: Builder(builder: (context) {
+          return GestureDetector(
+            child: thumbNail,
+            onTap: () {
+              ref.read(videoFileProvider.notifier).state = pickedVideo;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => PlayVideoPage(pickedVideo)),
+              );
+            },
+          );
+        }),
       ),
     );
     final tmpList = ref.watch(imageListprovider);
     tmpList.add(newVideo);
     ref.read(imageListprovider.notifier).state = [...tmpList];
+    Navigator.pop(context);
   } catch (e) {
     print('Failed to pick image: $e');
   }

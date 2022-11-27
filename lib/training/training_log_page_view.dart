@@ -7,3 +7,4 @@ final achieveCheckboxListProvider = StateProvider<List<bool>>((ref) => []);
 final imageListprovider = StateProvider.autoDispose<List<Widget>>((ref) => []);
 final tmp = File('assets/images/A_1_0.jpeg');
 final videoFileProvider = StateProvider<File>((ref) => tmp);
+final imageFileProvider = StateProvider<File>((ref) => tmp);
