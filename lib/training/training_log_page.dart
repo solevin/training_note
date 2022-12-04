@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
+import 'package:training_note/training/display_image_page.dart';
+import 'package:training_note/training/play_video_page.dart';
 import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
@@ -10,6 +14,9 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:training_note/training/set_training_page_view.dart';
 import 'package:training_note/training/training_log_page_view.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 class TrainingLogPage extends HookConsumerWidget {
   static Route<dynamic> route() {
@@ -37,12 +44,159 @@ class TrainingLogPage extends HookConsumerWidget {
           ),
           adviceListWidget(ref),
           isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
+          photoListWidget(ref),
+          shootPhotoButton(context, ref),
           inputMemo(ref),
           addTraininglogButton(ref, context, selectedDay),
         ],
       ),
     );
   }
+}
+
+Widget photoListWidget(WidgetRef ref) {
+  return Padding(
+    padding: EdgeInsets.all(10.r),
+    child: SizedBox(
+      height: 100.h,
+      child: SingleChildScrollView(
+        child: Wrap(
+          children: ref.watch(imageListprovider),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget shootPhotoButton(BuildContext context, WidgetRef ref) {
+  return Padding(
+    padding: EdgeInsets.all(10.r),
+    child: Container(
+      height: 30.h,
+      width: 50.w,
+      color: Colors.green,
+      child: GestureDetector(
+        onTap: () async {
+          // Navigator.of(context).push<dynamic>(
+          //   VideoPlayerPage.route(),
+          // );
+          showDialog(
+            context: context,
+            builder: (context) {
+              return SimpleDialog(
+                title: Text("タイトル"),
+                children: <Widget>[
+                  SimpleDialogOption(
+                    onPressed: () => getImage(ref, context),
+                    child: Text("写真"),
+                  ),
+                  SimpleDialogOption(
+                    onPressed: () => getVideo(ref, context),
+                    child: Text("動画"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    ),
+  );
+}
+
+Future<void> getImage(WidgetRef ref, BuildContext context) async {
+  final picker = ImagePicker();
+  try {
+    final pickedFile = await picker.getImage(source: ImageSource.camera);
+    if (pickedFile == null) {
+      return;
+    }
+    final pickedImage = File(pickedFile.path);
+    print(pickedFile.path);
+    final newImage = Padding(
+      padding: EdgeInsets.all(8.r),
+      child: SizedBox(
+        height: 100.h,
+        child: Builder(builder: (context) {
+          return GestureDetector(
+            child: Image.file(pickedImage),
+            onTap: () {
+              ref.read(imageFileProvider.notifier).state = pickedImage;
+              Navigator.of(context).push<dynamic>(
+                DisplayImagePage.route(),
+              );
+            },
+          );
+        }),
+      ),
+    );
+    final tmpList = ref.watch(imageListprovider);
+    tmpList.add(newImage);
+    ref.read(imageListprovider.notifier).state = [...tmpList];
+    Navigator.pop(context);
+  } catch (e) {
+    print('Failed to pick image: $e');
+  }
+  // final test =
+  //     '/storage/emulated/0/Android/data/com.example.training_note/files/Pictures/fa444e1a-685c-44c8-a278-d9c0735b0bb46766786158694208960.jpg';
+  // final match = RegExp(r'\....').allMatches(test);
+  // print(test);
+  // print(match.length);
+  // print(match.elementAt(0).group(0));
+  // print(match.elementAt(1).group(0));
+  // print(match.elementAt(match.length - 1).group(0));
+}
+
+Future<void> getVideo(WidgetRef ref, BuildContext context) async {
+  final picker = ImagePicker();
+  try {
+    final pickedFile = await picker.getVideo(source: ImageSource.camera);
+    if (pickedFile == null) {
+      return;
+    }
+    final pickedVideo = File(pickedFile.path);
+    final thumbNail = await getThumbnail(pickedFile.path);
+    final newVideo = Padding(
+      padding: EdgeInsets.all(8.r),
+      child: SizedBox(
+        height: 100.h,
+        child: Builder(builder: (context) {
+          return GestureDetector(
+            child: thumbNail,
+            onTap: () {
+              ref.read(videoFileProvider.notifier).state = pickedVideo;
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => PlayVideoPage(pickedVideo)),
+              );
+            },
+          );
+        }),
+      ),
+    );
+    final tmpList = ref.watch(imageListprovider);
+    tmpList.add(newVideo);
+    ref.read(imageListprovider.notifier).state = [...tmpList];
+    Navigator.pop(context);
+  } catch (e) {
+    print('Failed to pick image: $e');
+  }
+}
+
+Future<Widget> getThumbnail(String path) async {
+  final bytes = await VideoThumbnail.thumbnailData(
+    video: path,
+    imageFormat: ImageFormat.JPEG,
+    quality: 25,
+  );
+  final image = Image.memory(bytes!);
+  return Stack(
+    children: [
+      image,
+      const Icon(Icons.play_circle_filled_sharp),
+    ],
+  );
 }
 
 Widget inputMemo(WidgetRef ref) {
