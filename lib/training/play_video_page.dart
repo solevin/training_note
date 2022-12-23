@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:training_note/training/play_video_widget.dart';
 import 'package:training_note/training/training_log_page_view.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -67,68 +68,108 @@ import 'package:chewie/chewie.dart';
 //   }
 // }
 
-class PlayVideoPage extends StatefulWidget {
-  PlayVideoPage(this.file);
+// class PlayVideoPage extends StatefulWidget {
+//   PlayVideoPage(this.file);
 
+//   final File file;
+
+//   @override
+//   _PlayVideoPageState createState() => _PlayVideoPageState();
+// }
+
+// class _PlayVideoPageState extends State<PlayVideoPage> {
+//   late VideoPlayerController videoPlayerController;
+//   late ChewieController chewieController;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     videoPlayerController = VideoPlayerController.file(widget.file);
+//     chewieController = ChewieController(
+//       videoPlayerController: videoPlayerController,
+//       aspectRatio: 9 / 15,
+//       showControls: true,
+//       // autoPlay: false,
+//       // looping: true,
+//       // Try playing around with some of these other options:
+
+//       //showControls: false,
+//       // materialProgressColors: ChewieProgressColors(
+//       //   playedColor: Colors.red,
+//       //   handleColor: Colors.blue,
+//       //   backgroundColor: Colors.grey,
+//       //   bufferedColor: Colors.lightGreen,
+//       // ),
+//       // placeholder: Container(
+//       //   color: Colors.grey,
+//       // ),
+//       // autoInitialize: true,
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     videoPlayerController.dispose();
+//     chewieController.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: Chewie(
+//         controller: chewieController,
+//       ),
+//     );
+//   //   return Scaffold(
+//   //     body: Center(
+//   //       child: Column(
+//   //         mainAxisAlignment: MainAxisAlignment.center,
+//   //         children: <Widget>[
+//   //           Expanded(
+//   //             child: Center(
+//   //               child: Chewie(
+//   //                 controller: chewieController,
+//   //               ),
+//   //             ),
+//   //           ),
+//   //         ],
+//   //       ),
+//   //     ),
+//   //   );
+//   }
+// }
+
+class PlayVideoPage extends StatefulWidget {
   final File file;
+  const PlayVideoPage(this.file, {Key? key}) : super(key: key);
 
   @override
-  _PlayVideoPageState createState() => _PlayVideoPageState();
+  State<PlayVideoPage> createState() => _PlayVideoPageState();
 }
 
 class _PlayVideoPageState extends State<PlayVideoPage> {
-  late VideoPlayerController videoPlayerController;
-  late ChewieController chewieController;
+  late VideoPlayerController controller;
 
   @override
   void initState() {
     super.initState();
-    videoPlayerController = VideoPlayerController.file(widget.file);
-    chewieController = ChewieController(
-      videoPlayerController: videoPlayerController,
-      aspectRatio: 3 / 2,
-      autoPlay: false,
-      looping: true,
-      // Try playing around with some of these other options:
-
-      //showControls: false,
-      materialProgressColors: ChewieProgressColors(
-        playedColor: Colors.red,
-        handleColor: Colors.blue,
-        backgroundColor: Colors.grey,
-        bufferedColor: Colors.lightGreen,
-      ),
-      placeholder: Container(
-        color: Colors.grey,
-      ),
-      autoInitialize: true,
-    );
+    controller = VideoPlayerController.file(widget.file)
+      // ..addListener(() { })
+      // ..setLooping(false)
+      ..initialize().then((_) {setState(() {}); controller.play();});
   }
 
   @override
   void dispose() {
-    videoPlayerController.dispose();
-    chewieController.dispose();
+    controller.dispose();
+
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Expanded(
-              child: Center(
-                child: Chewie(
-                  controller: chewieController,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(toolbarHeight: 0,),
+    body: PlayVideoWidget(controller: controller),
+  );
 }
