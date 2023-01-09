@@ -104,8 +104,8 @@ class AbilityPage extends HookConsumerWidget {
 
 Future<int> getBestScore() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  if (prefs.getInt('bestscore') != null) {
-    return prefs.getInt('bestscore')!;
+  if (prefs.getInt('bestScore') != null) {
+    return prefs.getInt('bestScore')!;
   } else {
     return 0;
   }

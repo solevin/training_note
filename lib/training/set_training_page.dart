@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:training_note/db/advice.dart';
 import 'package:intl/intl.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/db/advice_dao.dart';
+import 'package:training_note/db/media.dart';
+import 'package:training_note/db/media_dao.dart';
 import 'package:training_note/training/set_training_page_view.dart';
 import 'package:training_note/training/training_log_page.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -46,6 +50,7 @@ class SetTrainingPage extends HookConsumerWidget {
               onTap: () {
                 decideAdvice(ref);
                 initAchieveCheckboxList(ref);
+                setMedia(ref);
                 Navigator.of(context).push<dynamic>(
                   TrainingLogPage.route(),
                 );
@@ -60,7 +65,7 @@ class SetTrainingPage extends HookConsumerWidget {
 
 List<Widget> adviceWidgetList(WidgetRef ref) {
   final result = <Widget>[];
-  final adviceList= ref.watch(adviceListProvider);
+  final adviceList = ref.watch(adviceListProvider);
   for (int i = 0; i < adviceList.length; i++) {
     // final tmpWidget = await adviceWidget(adviceList[i], isCheckedList[i],ref);
     final tmpWidget = adviceWidget(adviceList[i], ref, i);
@@ -171,4 +176,21 @@ void initAchieveCheckboxList(WidgetRef ref) {
     checkboxList.add(false);
   }
   ref.read(achieveCheckboxListProvider.notifier).state = [...checkboxList];
+}
+
+void setMedia(WidgetRef ref) async {
+  final dao = MediaDao();
+  final selectedDay = ref.watch(selectedDayProvider);
+  final idList = await dao.findByDate(
+      selectedDay.year, selectedDay.month, selectedDay.day);
+  final mediaWidgetList = <Widget>[];
+  for (int i = 0; i < idList.length; i++) {
+    final tmpMedia = await dao.findById(idList[i]);
+    if (tmpMedia.type == 'image') {
+      mediaWidgetList.add(newImageWidget(ref, tmpMedia.path));
+    } else if (tmpMedia.type == 'video') {
+      final thumbNail = await getThumbnail(tmpMedia.path);
+      mediaWidgetList.add(newVideoWidget(ref, tmpMedia.path, thumbNail));
+    }
+  }
 }

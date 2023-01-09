@@ -43,7 +43,7 @@ class DBProvider {
                 month INTEGER,
                 day INTEGER,
                 ballQuantity INTEGER,
-                isgame INTEGER,
+                isGame INTEGER,
                 score INTEGER,
                 memo TEXT
               )
@@ -74,6 +74,17 @@ class DBProvider {
                 date TEXT,
                 isAchieved INTEGER,
                 source TEXT
+              )
+            """);
+    database.execute("""
+            CREATE TABLE Media
+              (
+                id INTEGER PRIMARY KEY,
+                type TEXT,
+                year INTEGER,
+                month INTEGER,
+                day INTEGER,
+                path TEXT
               )
             """);
   }
