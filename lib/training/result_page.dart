@@ -55,35 +55,37 @@ class ResultPage extends HookConsumerWidget {
 
 Widget shareButton(BuildContext context, WidgetRef ref) {
   return Container(
-      padding: EdgeInsets.all(8.r),
-      height: 30.h,
-      width: 80.h,
-      child: GestureDetector(
-        onTap: () async {
-          // await Share.shareFiles([imagePath]);
-          showDialog(
-              context: context,
-              builder: (context) {
-                return SimpleDialog(
-                  title: const Text("共有"),
-                  children: <Widget>[
-                    SimpleDialogOption(
-                      onPressed: () => getImage(ref, context),
-                      child: const Text("写真・動画あり"),
-                    ),
-                    SimpleDialogOption(
-                      onPressed: () => Share.share(''),
-                      child: const Text("写真・動画なし"),
-                    ),
-                  ],
-                );
-              });
-        },
-        child: Text(
-          'share',
-          style: TextStyle(fontSize: 10.sp),
-        ),
-      ));
+    padding: EdgeInsets.all(8.r),
+    height: 30.h,
+    width: 80.h,
+    child: GestureDetector(
+      onTap: () async {
+        // await Share.shareFiles([imagePath]);
+        showDialog(
+          context: context,
+          builder: (context) {
+            return SimpleDialog(
+              title: const Text("共有"),
+              children: <Widget>[
+                SimpleDialogOption(
+                  onPressed: () => getImage(ref, context),
+                  child: const Text("写真・動画あり"),
+                ),
+                SimpleDialogOption(
+                  onPressed: () => Share.share(''),
+                  child: const Text("写真・動画なし"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Text(
+        'share',
+        style: TextStyle(fontSize: 10.sp),
+      ),
+    ),
+  );
 }
 
 Widget finishTrainingButton(
@@ -130,6 +132,7 @@ Widget finishTrainingButton(
           score: scoreResult,
           isGame: isGame,
           memo: memo,
+          time:0
         );
         if (id >= 0) {
           await dao.update(id, trainingLog);

@@ -335,6 +335,7 @@ Widget finishTrainingButton(
           score: scoreResult,
           isGame: isGame,
           memo: memo,
+          time:0
         );
         if (id >= 0) {
           await dao.update(id, trainingLog);
