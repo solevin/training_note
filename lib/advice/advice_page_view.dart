@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final isDisplayProvider = StateProvider.autoDispose<bool>((ref) => false);
 final isVisibleProvider = StateProvider.autoDispose<bool>((ref) => false);

@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,23 +13,42 @@ import 'package:training_note/db/training_log_dao.dart';
 import 'package:training_note/db/media.dart';
 import 'package:training_note/db/media_dao.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:training_note/training/set_training_page_view.dart';
-import 'package:training_note/training/training_log_page_view.dart';
+import 'package:training_note/training/training_view.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:stop_watch_timer/stop_watch_timer.dart';
 
-class TrainingLogPage extends HookConsumerWidget {
+class TrainingLogPage extends ConsumerStatefulWidget {
+  const TrainingLogPage({Key? key}) : super(key: key);
+
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const TrainingLogPage(),
     );
   }
 
-  const TrainingLogPage({Key? key}) : super(key: key);
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  TrainingLogPageState createState() => TrainingLogPageState();
+}
+
+class TrainingLogPageState extends ConsumerState<TrainingLogPage> {
+  final stopWatchTimer = StopWatchTimer(mode: StopWatchMode.countUp);
+  @override
+  void initState() {
+    super.initState();
+    stopWatchTimer.onStartTimer();
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    await stopWatchTimer.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     DateTime selectedDay = ref.watch(selectedDayProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
     final isTraining = ref.read(isTrainingProvider);
@@ -46,6 +65,7 @@ class TrainingLogPage extends HookConsumerWidget {
               ),
             ),
             adviceListWidget(ref),
+            trainingTimerWidget(stopWatchTimer),
             isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
             photoListWidget(ref),
             shootPhotoButton(context, ref),
@@ -56,6 +76,47 @@ class TrainingLogPage extends HookConsumerWidget {
       ),
     );
   }
+}
+
+Widget trainingTimerWidget(StopWatchTimer stopWatchTimer) {
+  return StreamBuilder<int>(
+    stream: stopWatchTimer.minuteTime,
+    initialData: 0,
+    builder: (context, snap) {
+      final value = snap.data;
+      final display = ('${value! ~/ 60} : ${value % 60}');
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    '練習時間',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontFamily: 'Helvetica',
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    display,
+                    style: TextStyle(fontSize: 20.sp),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 Widget photoListWidget(WidgetRef ref) {
@@ -85,15 +146,15 @@ Widget shootPhotoButton(BuildContext context, WidgetRef ref) {
             context: context,
             builder: (context) {
               return SimpleDialog(
-                title: Text("タイトル"),
+                title: const Text("タイトル"),
                 children: <Widget>[
                   SimpleDialogOption(
                     onPressed: () => getImage(ref, context),
-                    child: Text("写真"),
+                    child: const Text("写真"),
                   ),
                   SimpleDialogOption(
                     onPressed: () => getVideo(ref, context),
-                    child: Text("動画"),
+                    child: const Text("動画"),
                   ),
                 ],
               );
@@ -142,7 +203,6 @@ Future<void> getVideo(WidgetRef ref, BuildContext context) async {
     if (pickedFile == null) {
       return;
     }
-    final pickedVideo = File(pickedFile.path);
     await saveMedia('video', pickedFile.path, ref.watch(selectedDayProvider));
     final thumbNail = await getThumbnail(pickedFile.path);
     final newVideo = newVideoWidget(ref, pickedFile.path, thumbNail);
@@ -172,7 +232,7 @@ Future<Widget> getThumbnail(String path) async {
 
 Widget inputMemo(WidgetRef ref) {
   String text = ref.read(memoProvider);
-  ScrollController _scrollController = ScrollController();
+  ScrollController scrollController = ScrollController();
   return Column(
     children: [
       Align(
@@ -188,9 +248,9 @@ Widget inputMemo(WidgetRef ref) {
       Padding(
         padding: EdgeInsets.fromLTRB(10.w, 0, 10.w, 0),
         child: Scrollbar(
-          controller: _scrollController,
+          controller: scrollController,
           child: TextField(
-            scrollController: _scrollController,
+            scrollController: scrollController,
             style: TextStyle(fontSize: 15.sp),
             keyboardType: TextInputType.multiline,
             maxLines: 5,
@@ -328,15 +388,14 @@ Widget finishTrainingButton(
           }
         }
         final trainingLog = TrainingLog(
-          year: selectedDay.year,
-          month: selectedDay.month,
-          day: selectedDay.day,
-          ballQuantity: ballQuantityResult,
-          score: scoreResult,
-          isGame: isGame,
-          memo: memo,
-          time:0
-        );
+            year: selectedDay.year,
+            month: selectedDay.month,
+            day: selectedDay.day,
+            ballQuantity: ballQuantityResult,
+            score: scoreResult,
+            isGame: isGame,
+            memo: memo,
+            time: 0);
         if (id >= 0) {
           await dao.update(id, trainingLog);
         } else {
@@ -346,7 +405,7 @@ Widget finishTrainingButton(
           context: context,
           builder: (context) {
             return CupertinoAlertDialog(
-              title: Text("練習を終了しますか？"),
+              title: const Text("練習を終了しますか？"),
               actions: <Widget>[
                 CupertinoDialogAction(
                   onPressed: () {
@@ -354,13 +413,13 @@ Widget finishTrainingButton(
                       ResultPage.route(),
                     );
                   },
-                  child: Text("終了する"),
+                  child: const Text("終了する"),
                 ),
                 CupertinoDialogAction(
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  child: Text("続ける"),
+                  child: const Text("続ける"),
                 ),
               ],
             );

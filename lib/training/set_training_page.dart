@@ -2,18 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:training_note/db/advice.dart';
-import 'package:intl/intl.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/db/advice_dao.dart';
-import 'package:training_note/db/media.dart';
 import 'package:training_note/db/media_dao.dart';
-import 'package:training_note/training/set_training_page_view.dart';
 import 'package:training_note/training/training_log_page.dart';
+import 'package:training_note/training/training_view.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:training_note/training/training_log_page_view.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SetTrainingPage extends HookConsumerWidget {
+class SetTrainingPage extends ConsumerWidget {
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const SetTrainingPage(),
@@ -50,6 +47,7 @@ class SetTrainingPage extends HookConsumerWidget {
               onTap: () {
                 decideAdvice(ref);
                 initAchieveCheckboxList(ref);
+                // setTimer(ref);
                 setMedia(ref);
                 Navigator.of(context).push<dynamic>(
                   TrainingLogPage.route(),
@@ -194,3 +192,7 @@ void setMedia(WidgetRef ref) async {
     }
   }
 }
+
+// void setTimer(WidgetRef ref) async {
+//   ref.watch(stopWatchTimerProvider).onStartTimer();
+// }

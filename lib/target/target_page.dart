@@ -4,10 +4,10 @@ import 'package:training_note/db/target_log.dart';
 import 'package:training_note/db/target_log_dao.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/home/home_view.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_note/target/target_page_view.dart';
 
-class TargetPage extends HookConsumerWidget {
+class TargetPage extends ConsumerWidget {
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const TargetPage(),

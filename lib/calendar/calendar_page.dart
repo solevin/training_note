@@ -6,13 +6,13 @@ import 'package:training_note/home/home_view.dart';
 import 'package:training_note/training/training_log_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/training/set_training_page.dart';
-import 'package:training_note/training/set_training_page_view.dart';
+import 'package:training_note/training/training_view.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:training_note/db/advice_dao.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CalendarPage extends HookConsumerWidget {
+class CalendarPage extends ConsumerWidget {
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const CalendarPage(),

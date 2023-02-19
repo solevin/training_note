@@ -4,9 +4,9 @@ import 'package:training_note/ability/edit_distance_view.dart';
 import 'package:training_note/db/distance_by_count.dart';
 import 'package:training_note/db/distance_by_count_dao.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EditDistancePage extends HookConsumerWidget {
+class EditDistancePage extends ConsumerWidget {
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const EditDistancePage(),
