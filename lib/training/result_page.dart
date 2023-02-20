@@ -1,22 +1,13 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
-import 'package:training_note/training/display_image_page.dart';
-import 'package:training_note/training/play_video_page.dart';
-import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:training_note/training/training_log_page.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:training_note/training/training_view.dart';
 import 'package:share/share.dart';
 
 class ResultPage extends ConsumerWidget {
@@ -92,6 +83,7 @@ Widget finishTrainingButton(
   String ballQuantity = ref.watch(ballQuantityProvider);
   String score = ref.watch(scoreProvider);
   String memo = ref.watch(memoProvider);
+  int time = ref.watch(trainingTimeProvider);
   final dao = TrainingLogDao();
   int isGame = 1;
 
@@ -130,7 +122,7 @@ Widget finishTrainingButton(
           score: scoreResult,
           isGame: isGame,
           memo: memo,
-          time:0
+          time:time
         );
         if (id >= 0) {
           await dao.update(id, trainingLog);

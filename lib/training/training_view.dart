@@ -11,3 +11,4 @@ final imageListProvider = StateProvider.autoDispose<List<Widget>>((ref) => []);
 final tmp = File('assets/images/A_1_0.jpeg');
 final videoFileProvider = StateProvider<File>((ref) => tmp);
 final imageFileProvider = StateProvider<File>((ref) => tmp);
+final trainingTimeProvider = StateProvider<int>((ref) => 0);

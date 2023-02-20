@@ -65,7 +65,7 @@ class TrainingLogPageState extends ConsumerState<TrainingLogPage> {
               ),
             ),
             adviceListWidget(ref),
-            trainingTimerWidget(stopWatchTimer),
+            trainingTimerWidget(stopWatchTimer, ref),
             isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
             photoListWidget(ref),
             shootPhotoButton(context, ref),
@@ -78,13 +78,14 @@ class TrainingLogPageState extends ConsumerState<TrainingLogPage> {
   }
 }
 
-Widget trainingTimerWidget(StopWatchTimer stopWatchTimer) {
+Widget trainingTimerWidget(StopWatchTimer stopWatchTimer, WidgetRef ref) {
   return StreamBuilder<int>(
     stream: stopWatchTimer.minuteTime,
     initialData: 0,
     builder: (context, snap) {
       final value = snap.data;
-      final display = ('${value! ~/ 60} : ${value % 60}');
+      ref.read(trainingTimeProvider.notifier).state = value!;
+      final display = ('${value ~/ 60} : ${value % 60}');
       return Column(
         children: [
           Padding(
@@ -97,10 +98,7 @@ Widget trainingTimerWidget(StopWatchTimer stopWatchTimer) {
                   padding: EdgeInsets.symmetric(horizontal: 4),
                   child: Text(
                     '練習時間',
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontFamily: 'Helvetica',
-                    ),
+                    style: TextStyle(fontSize: 17),
                   ),
                 ),
                 Padding(
