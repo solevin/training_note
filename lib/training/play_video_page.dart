@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:training_note/training/play_video_widget.dart';
-import 'package:training_note/training/training_log_page_view.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:training_note/training/training_view.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 
-// class PlayVideoPage extends HookConsumerWidget {
+// class PlayVideoPage extends ConsumerWidget {
 //   static Route<dynamic> route() {
 //     return MaterialPageRoute<dynamic>(
 //       builder: (_) => const PlayVideoPage(),

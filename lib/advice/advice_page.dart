@@ -4,10 +4,10 @@ import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/advice_dao.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:training_note/home/home_view.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_note/advice/advice_page_view.dart';
 
-class AdvicePage extends HookConsumerWidget {
+class AdvicePage extends ConsumerWidget {
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const AdvicePage(),

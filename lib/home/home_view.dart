@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_note/calendar/calendar_page.dart';
 import 'package:training_note/ability/ability_page.dart';
 import 'package:training_note/advice/advice_page.dart';

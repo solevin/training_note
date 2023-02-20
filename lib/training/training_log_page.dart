@@ -1,57 +1,120 @@
 import 'dart:io';
-
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:training_note/calendar/calendar_page.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:training_note/calendar/calendar_page_view.dart';
 import 'package:training_note/training/display_image_page.dart';
 import 'package:training_note/training/play_video_page.dart';
+import 'package:training_note/training/result_page.dart';
 import 'package:training_note/db/advice.dart';
 import 'package:training_note/db/training_log.dart';
 import 'package:training_note/db/training_log_dao.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:training_note/db/media.dart';
+import 'package:training_note/db/media_dao.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:training_note/training/set_training_page_view.dart';
-import 'package:training_note/training/training_log_page_view.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:training_note/training/training_view.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
+import 'package:stop_watch_timer/stop_watch_timer.dart';
 
-class TrainingLogPage extends HookConsumerWidget {
+class TrainingLogPage extends ConsumerStatefulWidget {
+  const TrainingLogPage({Key? key}) : super(key: key);
+
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const TrainingLogPage(),
     );
   }
 
-  const TrainingLogPage({Key? key}) : super(key: key);
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  TrainingLogPageState createState() => TrainingLogPageState();
+}
+
+class TrainingLogPageState extends ConsumerState<TrainingLogPage> {
+  final stopWatchTimer = StopWatchTimer(mode: StopWatchMode.countUp);
+  @override
+  void initState() {
+    super.initState();
+    stopWatchTimer.onStartTimer();
+  }
+
+  @override
+  void dispose() async {
+    super.dispose();
+    await stopWatchTimer.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     DateTime selectedDay = ref.watch(selectedDayProvider);
     String date = DateFormat('M/d (E)').format(selectedDay);
     final isTraining = ref.read(isTrainingProvider);
     return Scaffold(
       appBar: AppBar(title: Text(date)),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.all(5.r),
-            child: Text(
-              '目標',
-              style: TextStyle(fontSize: 20.sp),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(5.r),
+              child: Text(
+                '目標',
+                style: TextStyle(fontSize: 20.sp),
+              ),
             ),
-          ),
-          adviceListWidget(ref),
-          isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
-          photoListWidget(ref),
-          shootPhotoButton(context, ref),
-          inputMemo(ref),
-          addTraininglogButton(ref, context, selectedDay),
-        ],
+            adviceListWidget(ref),
+            trainingTimerWidget(stopWatchTimer, ref),
+            isTraining == true ? inputBallQuantity(ref) : inputScore(ref),
+            photoListWidget(ref),
+            shootPhotoButton(context, ref),
+            inputMemo(ref),
+            finishTrainingButton(ref, context, selectedDay),
+          ],
+        ),
       ),
     );
   }
+}
+
+Widget trainingTimerWidget(StopWatchTimer stopWatchTimer, WidgetRef ref) {
+  return StreamBuilder<int>(
+    stream: stopWatchTimer.minuteTime,
+    initialData: 0,
+    builder: (context, snap) {
+      final value = snap.data;
+      ref.read(trainingTimeProvider.notifier).state = value!;
+      final display = ('${value ~/ 60} : ${value % 60}');
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    '練習時間',
+                    style: TextStyle(fontSize: 17),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    display,
+                    style: TextStyle(fontSize: 20.sp),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 Widget photoListWidget(WidgetRef ref) {
@@ -61,7 +124,7 @@ Widget photoListWidget(WidgetRef ref) {
       height: 100.h,
       child: SingleChildScrollView(
         child: Wrap(
-          children: ref.watch(imageListprovider),
+          children: ref.watch(imageListProvider),
         ),
       ),
     ),
@@ -77,22 +140,19 @@ Widget shootPhotoButton(BuildContext context, WidgetRef ref) {
       color: Colors.green,
       child: GestureDetector(
         onTap: () async {
-          // Navigator.of(context).push<dynamic>(
-          //   VideoPlayerPage.route(),
-          // );
           showDialog(
             context: context,
             builder: (context) {
               return SimpleDialog(
-                title: Text("タイトル"),
+                title: const Text("タイトル"),
                 children: <Widget>[
                   SimpleDialogOption(
                     onPressed: () => getImage(ref, context),
-                    child: Text("写真"),
+                    child: const Text("写真"),
                   ),
                   SimpleDialogOption(
                     onPressed: () => getVideo(ref, context),
-                    child: Text("動画"),
+                    child: const Text("動画"),
                   ),
                 ],
               );
@@ -104,6 +164,18 @@ Widget shootPhotoButton(BuildContext context, WidgetRef ref) {
   );
 }
 
+Future<void> saveMedia(String type, String path, DateTime selectedDay) async {
+  final dao = MediaDao();
+  final target = Media(
+    type: type,
+    year: selectedDay.year,
+    month: selectedDay.month,
+    day: selectedDay.day,
+    path: path,
+  );
+  await dao.create(target);
+}
+
 Future<void> getImage(WidgetRef ref, BuildContext context) async {
   final picker = ImagePicker();
   try {
@@ -111,40 +183,15 @@ Future<void> getImage(WidgetRef ref, BuildContext context) async {
     if (pickedFile == null) {
       return;
     }
-    final pickedImage = File(pickedFile.path);
-    print(pickedFile.path);
-    final newImage = Padding(
-      padding: EdgeInsets.all(8.r),
-      child: SizedBox(
-        height: 100.h,
-        child: Builder(builder: (context) {
-          return GestureDetector(
-            child: Image.file(pickedImage),
-            onTap: () {
-              ref.read(imageFileProvider.notifier).state = pickedImage;
-              Navigator.of(context).push<dynamic>(
-                DisplayImagePage.route(),
-              );
-            },
-          );
-        }),
-      ),
-    );
-    final tmpList = ref.watch(imageListprovider);
+    await saveMedia('image', pickedFile.path, ref.watch(selectedDayProvider));
+    final newImage = newImageWidget(ref, pickedFile.path);
+    final tmpList = ref.watch(imageListProvider);
     tmpList.add(newImage);
-    ref.read(imageListprovider.notifier).state = [...tmpList];
+    ref.read(imageListProvider.notifier).state = [...tmpList];
     Navigator.pop(context);
   } catch (e) {
     print('Failed to pick image: $e');
   }
-  // final test =
-  //     '/storage/emulated/0/Android/data/com.example.training_note/files/Pictures/fa444e1a-685c-44c8-a278-d9c0735b0bb46766786158694208960.jpg';
-  // final match = RegExp(r'\....').allMatches(test);
-  // print(test);
-  // print(match.length);
-  // print(match.elementAt(0).group(0));
-  // print(match.elementAt(1).group(0));
-  // print(match.elementAt(match.length - 1).group(0));
 }
 
 Future<void> getVideo(WidgetRef ref, BuildContext context) async {
@@ -154,30 +201,12 @@ Future<void> getVideo(WidgetRef ref, BuildContext context) async {
     if (pickedFile == null) {
       return;
     }
-    final pickedVideo = File(pickedFile.path);
+    await saveMedia('video', pickedFile.path, ref.watch(selectedDayProvider));
     final thumbNail = await getThumbnail(pickedFile.path);
-    final newVideo = Padding(
-      padding: EdgeInsets.all(8.r),
-      child: SizedBox(
-        height: 100.h,
-        child: Builder(builder: (context) {
-          return GestureDetector(
-            child: thumbNail,
-            onTap: () {
-              ref.read(videoFileProvider.notifier).state = pickedVideo;
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => PlayVideoPage(pickedVideo)),
-              );
-            },
-          );
-        }),
-      ),
-    );
-    final tmpList = ref.watch(imageListprovider);
+    final newVideo = newVideoWidget(ref, pickedFile.path, thumbNail);
+    final tmpList = ref.watch(imageListProvider);
     tmpList.add(newVideo);
-    ref.read(imageListprovider.notifier).state = [...tmpList];
+    ref.read(imageListProvider.notifier).state = [...tmpList];
     Navigator.pop(context);
   } catch (e) {
     print('Failed to pick image: $e');
@@ -201,6 +230,7 @@ Future<Widget> getThumbnail(String path) async {
 
 Widget inputMemo(WidgetRef ref) {
   String text = ref.read(memoProvider);
+  ScrollController scrollController = ScrollController();
   return Column(
     children: [
       Align(
@@ -215,22 +245,26 @@ Widget inputMemo(WidgetRef ref) {
       ),
       Padding(
         padding: EdgeInsets.fromLTRB(10.w, 0, 10.w, 0),
-        child: TextField(
-          style: TextStyle(fontSize: 15.sp),
-          keyboardType: TextInputType.multiline,
-          maxLines: null,
-          controller: TextEditingController(text: text),
-          decoration: const InputDecoration(
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.red),
+        child: Scrollbar(
+          controller: scrollController,
+          child: TextField(
+            scrollController: scrollController,
+            style: TextStyle(fontSize: 15.sp),
+            keyboardType: TextInputType.multiline,
+            maxLines: 5,
+            controller: TextEditingController(text: text),
+            decoration: const InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.red),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue),
+              ),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.blue),
-            ),
+            onChanged: (text) {
+              ref.read(memoProvider.notifier).state = text;
+            },
           ),
-          onChanged: (text) {
-            ref.read(memoProvider.notifier).state = text;
-          },
         ),
       ),
     ],
@@ -256,7 +290,6 @@ Widget inputBallQuantity(WidgetRef ref) {
                 style: TextStyle(fontSize: 15.sp),
                 keyboardType: TextInputType.number,
                 controller: TextEditingController(text: text),
-                // inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.red),
@@ -316,15 +349,14 @@ Widget inputScore(WidgetRef ref) {
   );
 }
 
-Widget addTraininglogButton(
+Widget finishTrainingButton(
     WidgetRef ref, BuildContext context, DateTime selectedDay) {
-  // int id = ModalRoute.of(context)!.settings.arguments as int;
   final id = ref.watch(idProvider);
   String ballQuantity = ref.watch(ballQuantityProvider);
   String score = ref.watch(scoreProvider);
   String memo = ref.watch(memoProvider);
   final dao = TrainingLogDao();
-  int isgame = 1;
+  int isGame = 1;
 
   return Padding(
     padding: EdgeInsets.all(8.r),
@@ -344,33 +376,53 @@ Widget addTraininglogButton(
         }
         if (scoreResult <= 0) {
           scoreResult = 0;
-          isgame = 0;
+          isGame = 0;
         } else {
-          isgame = 1;
+          isGame = 1;
           SharedPreferences prefs = await SharedPreferences.getInstance();
           if (prefs.getInt('score') == null ||
               prefs.getInt('score')! > int.parse(score)) {
-            prefs.setInt('bestscore', int.parse(score));
+            prefs.setInt('bestScore', int.parse(score));
           }
         }
         final trainingLog = TrainingLog(
-          year: selectedDay.year,
-          month: selectedDay.month,
-          day: selectedDay.day,
-          ballQuantity: ballQuantityResult,
-          score: scoreResult,
-          isgame: isgame,
-          memo: memo,
-        );
+            year: selectedDay.year,
+            month: selectedDay.month,
+            day: selectedDay.day,
+            ballQuantity: ballQuantityResult,
+            score: scoreResult,
+            isGame: isGame,
+            memo: memo,
+            time: 0);
         if (id >= 0) {
           await dao.update(id, trainingLog);
         } else {
           dao.create(trainingLog);
         }
-        Navigator.of(context).push<dynamic>(
-          CalendarPage.route(),
+        showCupertinoDialog(
+          context: context,
+          builder: (context) {
+            return CupertinoAlertDialog(
+              title: const Text("練習を終了しますか？"),
+              actions: <Widget>[
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.of(context).push<dynamic>(
+                      ResultPage.route(),
+                    );
+                  },
+                  child: const Text("終了する"),
+                ),
+                CupertinoDialogAction(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text("続ける"),
+                ),
+              ],
+            );
+          },
         );
-        // print(id);
       },
       child: Container(
         height: 30.h,
@@ -378,7 +430,7 @@ Widget addTraininglogButton(
         color: Colors.blue,
         child: Center(
           child: Text(
-            'add',
+            'finish',
             style: TextStyle(fontSize: 20.sp, color: Colors.white),
           ),
         ),
@@ -428,6 +480,48 @@ Widget adviceContent(WidgetRef ref, Advice advice, int index) {
           ),
         ],
       ),
+    ),
+  );
+}
+
+Widget newImageWidget(WidgetRef ref, String imagePath) {
+  return Padding(
+    padding: EdgeInsets.all(8.r),
+    child: SizedBox(
+      height: 100.h,
+      child: Builder(builder: (context) {
+        return GestureDetector(
+          child: Image.file(File(imagePath)),
+          onTap: () {
+            ref.read(imageFileProvider.notifier).state = File(imagePath);
+            Navigator.of(context).push<dynamic>(
+              DisplayImagePage.route(),
+            );
+          },
+        );
+      }),
+    ),
+  );
+}
+
+Widget newVideoWidget(WidgetRef ref, String videoPath, Widget thumbNail) {
+  return Padding(
+    padding: EdgeInsets.all(8.r),
+    child: SizedBox(
+      height: 100.h,
+      child: Builder(builder: (context) {
+        return GestureDetector(
+          child: thumbNail,
+          onTap: () {
+            ref.read(videoFileProvider.notifier).state = File(videoPath);
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => PlayVideoPage(File(videoPath))),
+            );
+          },
+        );
+      }),
     ),
   );
 }

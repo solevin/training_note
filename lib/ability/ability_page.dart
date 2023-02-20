@@ -5,9 +5,9 @@ import 'package:training_note/ability/edit_distance_view.dart';
 import 'package:training_note/home/home_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AbilityPage extends HookConsumerWidget {
+class AbilityPage extends ConsumerWidget {
   static Route<dynamic> route() {
     return MaterialPageRoute<dynamic>(
       builder: (_) => const AbilityPage(),
@@ -104,8 +104,8 @@ class AbilityPage extends HookConsumerWidget {
 
 Future<int> getBestScore() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  if (prefs.getInt('bestscore') != null) {
-    return prefs.getInt('bestscore')!;
+  if (prefs.getInt('bestScore') != null) {
+    return prefs.getInt('bestScore')!;
   } else {
     return 0;
   }
